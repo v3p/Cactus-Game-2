@@ -55,9 +55,15 @@ function setColor(r, g, b, a)
 	if type(r) == "table" then
 		r, g, b, a = r[1], r[2], r[3], r[4]
 	end
-	a = a or 1
+	a = a or 255
 
-	love.graphics.setColor(r / 255, g / 255, b / 255, a / 255)
+	love.graphics.setColor(convertColor(r, g, b, a))
+end
+
+--Converts a color from the 0-255 range to 0-1
+function convertColor(r, g, b, a)
+	a = a or 1
+	return {r / 255, g / 255, b / 255, a / 255}
 end
 
 function tableToString(tab, recursion)

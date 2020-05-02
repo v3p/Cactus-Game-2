@@ -55,8 +55,8 @@ function sky:load()
 		night = verticalGradient(config.display.width, config.display.height, {22 / 255, 29 / 255, 36 / 255}, {59 / 255, 87 / 255, 113 / 255})
 	}
 
-	self.time = math.random() * (math.pi * 2)
-	self.timeScale = 0.01
+	self.time = math.pi
+	self.timeScale = 0.03
 end
 
 function sky:spawnCloud(x, y)
@@ -115,7 +115,9 @@ function sky:update(dt)
 	self.sun.x = self.centerX + (self.orbitRadius * math.sin(self.sun.angle))
 	self.sun.y = self.centerY + (self.orbitRadius * math.cos(self.sun.angle))
 
-	light:setAmbient(fmath.normal(self.sun.y, self.orbitRadius, -self.orbitRadius))
+
+	--Ambient light update
+	light:setAmbient(0.6 + (fmath.normal(self.sun.y, self.orbitRadius, -self.orbitRadius) * 0.4))
 
 	--Cloud spawning
 	self.cloud.timer = self.cloud.timer + dt

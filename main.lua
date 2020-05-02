@@ -227,7 +227,8 @@ function love.draw()
 					 "\nSpawned Entities: "..entity:count()..
 					 "\nDraw Calls: "..stats.drawcalls..
 					 "\nCanvas Switch: "..stats.canvasswitches..
-					 "\nTexture Memory: "..(math.floor((stats.texturememory / 1024 / 1024) * 100) / 100).."mb", 12, 12)
+					 "\nTexture Memory: "..(math.floor((stats.texturememory / 1024 / 1024) * 100) / 100).."mb"..
+					 "\nCreated UI Elements: "..#ui.list, 12, 12)
 		end
 	end
 

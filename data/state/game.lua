@@ -1,5 +1,23 @@
 local game = {}
 
+local gameOverLines = {
+	"wasted",
+	"you fucked up",
+	"you got fucked up",
+	"you got dead",
+	"lol u suck",
+	"better luck next time",
+	"R.I.P",
+	"u dead",
+	"that looked like it hurt",
+	"stings doesn't it?",
+	"you're dead",
+	"Cluckity fucked",
+	"hahahahahahahaha",
+	"<==3"
+
+}
+
 --USER INTERFACE
 --Button callbacks
 function startButton(e)
@@ -19,14 +37,20 @@ function game:createStartup()
 	--UI
 	ui:clear()
 
+	--Panel
+	self.mainPanel = ui:newPanel({0, 0, 0, 0.4}, 0, 0, lg.getWidth() / 2, lg.getHeight(), "top")
+	ui:center(self.mainPanel, true, false)
+	ui:hide(self.mainPanel, true)
+	ui:setScreen(self.mainPanel, "main")
+
 	--Title
-	local titleQuad = ui:newQuad(0, 16, 76, 31)
+	local titleQuad = ui:newQuad(0, 16, 77, 32)
 	--ui:newImage(quad, x, y, scale, hideDirection)
 	self.title = ui:newImage(false, titleQuad, 0, lg.getHeight() * 0.1, (drawSize / assetSize) * 1.4, "left")
 
 	ui:center(self.title, true, false)
 	ui:hide(self.title, true)
-	ui:show(self.title)
+	ui:setScreen(self.title, "main")
 
 	--Start button
 	--ui:newButton(func, text, x, y, width, height, hideDirection)
@@ -36,51 +60,85 @@ function game:createStartup()
 
 	ui:center(self.startButton, true, false)
 	ui:hide(self.startButton, true)
-	ui:show(self.startButton)
+	ui:setScreen(self.startButton, "main")
 
 	--Exit button
 	self.exitButton = ui:newImage(exitButton, ui.quad[4], drawSize * 0.1, lg.getHeight() - (drawSize * 1.7), (drawSize / assetSize) * 1.6, "bottom")
 
 	ui:hide(self.exitButton, true)
-	ui:show(self.exitButton)
+	ui:setScreen(self.exitButton, "main")
 
 	---func, text, x, y, font, color, hideDirection)
 	self.subtitle = ui:newText(false, SUBTITLE, 0, lg.getHeight() * 0.45, font.tiny, {0.9, 0.1, 0.1}, "top")
 	ui:center(self.subtitle, true, false)
 	ui:hide(self.subtitle, true)
-	ui:show(self.subtitle)
+	ui:setScreen(self.subtitle, "main")
 end
 
 function game:createIngame()
-	ui:hide(self.title)
-	ui:hide(self.startButton)
-	ui:hide(self.exitButton)
-	ui:hide(self.subtitle)
+	self.distanceLogo = ui:newImage(false, ui.quad[28], lg.getWidth() * 0.01, lg.getHeight() * 0.85, (drawSize / assetSize) * 1.4, "left")
+	ui:hide(self.distanceLogo, true)
+	ui:setScreen(self.distanceLogo, "ingame")
+
+	self.ingameScore = ui:newText(false, "0", lg.getWidth() * 0.11, lg.getHeight() * 0.87, font.small, {0.9, 0.9, 0.9}, "bottom")
+	ui:hide(self.ingameScore, true)
+	ui:setScreen(self.ingameScore, "ingame")
 end
 
 function game:createEndgame()
-	--Hide the ingame shit here
+	--Destroy
+	ui:clear()
 
-	self.resetButton = ui:newButton(resetButton, "RESET", 0, lg.getHeight() * 0.6, drawSize * 5, drawSize * 2, "right")
+	self.resetButton = ui:newButton(resetButton, "RESET", 0, lg.getHeight() * 0.6, drawSize * 5, drawSize * 2, "left")
 
 	ui:setFont(self.resetButton, font.large)
 
 	ui:center(self.resetButton, true, false)
 	ui:hide(self.resetButton, true)
-	ui:show(self.resetButton)
+	ui:setScreen(self.resetButton, "endgame")
 
-	self.gameOverText = ui:newText(false, "you got dead", 0, lg.getHeight() * 0.2, font.large, {0.9, 0.1, 0.1}, "top")
+
+	self.gameOverText = ui:newText(false, gameOverLines[math.random(#gameOverLines)], 0, lg.getHeight() * 0.2, font.large, {0.8, 0.2, 0.2}, "top")
 	ui:center(self.gameOverText, true, false)
 	ui:hide(self.gameOverText, true)
-	ui:show(self.gameOverText)
+	ui:setScreen(self.gameOverText, "endgame")
 
-	self.scoreText = ui:newText(false, "You made it "..(math.floor(self.distance * 100) / 100).." meters", 0, lg.getHeight() * 0.4, font.small, {0.9, 0.9, 0.9}, "left")
+	self.scoreText = ui:newText(false, "You made it "..(math.floor(self.distance * 100) / 100).." meters", 0, lg.getHeight() * 0.85, font.small, {0.1, 0.9, 0.2}, "left")
 	ui:center(self.scoreText, true, false)
 	ui:hide(self.scoreText, true)
-	ui:show(self.scoreText)
+	ui:setScreen(self.scoreText, "endgame")
 
+	self.exitButton = ui:newImage(exitButton, ui.quad[4], drawSize * 0.1, lg.getHeight() - (drawSize * 1.7), (drawSize / assetSize) * 1.6, "bottom")
+
+	ui:hide(self.exitButton, true)
+	ui:setScreen(self.exitButton, "endgame")
+end
+
+--Showing
+function game:showStartup()
+	ui:showScreen("main")
+end
+
+function game:showIngame()
+	ui:showScreen("ingame")
+end
+
+function game:showEndgame()
+	ui:showScreen("endgame")
 	ui:show(self.exitButton)
+end
 
+--Hiding
+function game:hideStartup()
+	ui:hideScreen("main")
+end
+
+function game:hideIngame()
+	ui:hideScreen("ingame")
+end
+
+function game:hideEndgame()
+	ui:hideScreen("endgame")
 end
 
 function game:load()
@@ -95,6 +153,9 @@ function game:load()
 	self.first = true
 	sky:load()
 
+	--Creating UI
+	self:createStartup()
+
 	self:reset()
 end
 
@@ -102,8 +163,6 @@ function game:reset()
 	physics:load()
 	light:load()
 	sky:createLights()
-
-	self:createStartup()
 
 	--Creating World
 	self.ground = {
@@ -161,7 +220,11 @@ function game:reset()
 	sound:play("main_theme")
 	sound:setVolume("main_theme", 0.6)
 
-	screenEffect:flash(5, {0, 0, 0})
+	screenEffect:flash(3, {0, 0, 0})
+
+	--UI
+	self:createStartup()
+	self:showStartup()
 end
 
 function game:start()
@@ -170,7 +233,8 @@ function game:start()
 	self.player:run()
 	self.player:show()
 	sound:play("run")
-
+	ui:hideScreen("main")
+	ui:showScreen("ingame")
 end
 
 function game:lose()
@@ -179,8 +243,6 @@ function game:lose()
 	sound:play("game_over")
 	screenEffect:shake()
 	self.player:hide()
-
-	self:createEndgame()
 
 	--Input Delay
 	self.takeInput = false
@@ -200,6 +262,12 @@ function game:lose()
 	sound:play("hit")
 	sound:play("death", 0.05)
 	sound:stop("run")
+
+	--UI
+	ui:hideScreen("ingame")
+	ui:deleteScreen("endgame")
+	self:createEndgame()
+	ui:showScreen("endgame")
 end
 
 function game:pause()
@@ -342,6 +410,7 @@ function game:update(dt)
 			timeScale = timeScale * 2
 		end
 		self.distance = self.distance + (dt * (self.gameSpeed * timeScale) )
+		self.ingameScore.text = math.floor(self.distance * 100) / 100
 
 		self.gameSpeedTick = self.gameSpeedTick + dt
 		if self.gameSpeedTick > self.gameSpeedTime then

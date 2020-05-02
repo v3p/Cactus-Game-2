@@ -123,6 +123,7 @@ function player:jump(height, silent)
 			if state:getState().trip then
 				snd = "jumpTrip"
 			end
+			sound:setPitch(snd, 0.8)
 			sound:play(snd) 
 		end
 		sound:stop("run")

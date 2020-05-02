@@ -85,7 +85,9 @@ function ui:newImage(func, quad, x, y, scale, hideDirection)
 		visibleY = y,
 		--Hidden position
 		hiddenX = hideX,
-		hiddenY = hideY
+		hiddenY = hideY,
+		--
+		screen = ""
 	}
 
 	return self.list[#self.list]
@@ -116,7 +118,9 @@ function ui:newButton(func, text, x, y, width, height, hideDirection)
 		visibleY = y,
 		--Hidden position
 		hiddenX = hideX,
-		hiddenY = hideY
+		hiddenY = hideY,
+
+		screen = ""
 	}
 
 	return self.list[#self.list]
@@ -149,7 +153,40 @@ function ui:newText(func, text, x, y, font, color, hideDirection)
 		visibleY = y,
 		--Hidden position
 		hiddenX = hideX,
-		hiddenY = hideY
+		hiddenY = hideY,
+
+		screen = ""
+	}
+
+	return self.list[#self.list]
+end
+
+function ui:newPanel(color, x, y, width, height, hideDirection)
+	local hideX, hideY = self:getHidePosition(hideDirection, x, y, width, height)
+	self.list[#self.list + 1] = {
+		type = "panel",
+		color = color,
+		hideDirection = hideDirection,
+		--Status
+		hidden = false,
+		offScreen = false,
+
+		width = width,
+		height = height,
+		--Current position
+		x = x,
+		y = y,
+		--target position
+		targetX = x,
+		targetY = y,
+		--Visible position
+		visibleX = x,
+		visibleY = y,
+		--Hidden position
+		hiddenX = hideX,
+		hiddenY = hideY,
+
+		screen = ""
 	}
 
 	return self.list[#self.list]
@@ -182,7 +219,8 @@ function ui:hide(element, instant)
 	end
 end
 
-function ui:center(element, x, y)
+function ui:center(element, x, y, move)
+	move = move or false
 
 	if x then
 		element.visibleX = (lg.getWidth() / 2) - (element.width / 2)
@@ -191,14 +229,49 @@ function ui:center(element, x, y)
 		element.visibleY = (lg.getHeight() / 2) - (element.height / 2)
 	end
 
+	if move then
+		element.x = element.visibleX
+		element.y = element.visibleY
+	end
+
 	--Updating hide positions
 	local hideX, hideY = self:getHidePosition(element.hideDirection, element.visibleX, element.visibleY, element.width, element.height)
 	element.hiddenX = hideX
 	element.hiddenY = hideY
+
+	element.center = true
 end
 
 function ui:setFont(element, font)
 	element.font = font
+end
+
+function ui:setScreen(element, screen)
+	element.screen = screen
+end
+
+function ui:showScreen(screen)
+	for i,v in ipairs(self.list) do
+		if v.screen == screen then
+			self:show(v)
+		end
+	end
+end
+
+function ui:hideScreen(screen)
+	for i,v in ipairs(self.list) do
+		if v.screen == screen then
+			self:hide(v)
+		end
+	end
+end
+
+function ui:deleteScreen(screen)
+	for i,v in ipairs(self.list) do
+		if v.screen == screen then
+			table.remove(self.list, i)
+		end
+	end
 end
 
 --CALLBACK SHIT
@@ -221,6 +294,7 @@ end
 
 function ui:draw()
 	for i,v in ipairs(self.list) do
+
 		if v.type == "image" then
 			lg.setColor(1, 1, 1, 1)
 			lg.draw(self.atlas, v.quad, v.x, v.y, 0, v.scale, v.scale)
@@ -245,8 +319,19 @@ function ui:draw()
 		elseif v.type == "text" then
 			lg.setColor(v.color)
 			lg.setFont(v.font)
-			lg.print(v.text, v.x, v.y)
+			if v.center then
+				lg.printf(v.text, 0, v.y, lg.getWidth(), "center")
+			else
+				lg.print(v.text, v.x, v.y)
+			end
+		elseif v.type == "panel" then
+			lg.setColor(v.color)
+			lg.rectangle("fill", v.x, v.y, v.width, v.height)
+			lg.setColor(0, 0, 0, 1)
+			lg.rectangle("line", v.x, v.y, v.width, v.height)
 		end
+		--lg.setColor(1, 0, 1, 1)
+		--lg.print(v.screen, v.x, v.y)
 	end
 end
 
