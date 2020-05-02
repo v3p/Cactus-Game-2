@@ -15,6 +15,12 @@ function requireFolder(path, tab)
 	end
 end	
 
+function pointInRect(x, y, _x, _y, width, height)
+	if x > _x and x < _x + width and y > _y and y < _y + height then
+		return true
+	else return false end
+end
+
 function getFileType(file)
  	return string.match(file, "%..+")
 end

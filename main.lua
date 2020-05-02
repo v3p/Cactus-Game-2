@@ -1,4 +1,5 @@
-NAME = "Cactus Game 2: The Dark World"
+NAME = "Cactus Game 2"
+SUBTITLE = "Return of the cacti"
 VERSION = "0.01"
 
 lg = love.graphics
@@ -15,7 +16,7 @@ function love.load()
 	if os == "Android" or os == "iOS"then
 		platform = "mobile"
 	end
-	platform = "mobile"
+	--platform = "mobile"
 
 	--This needs to go.
 	useShader = false
@@ -178,10 +179,10 @@ function loadFont()
 	--love.graphics.setLineWidth(math.floor(config.display.width * 0.004))
 	love.graphics.setLineWidth(1)
 	font = {
-		micro = love.graphics.newFont("data/art/font/PixelOperator8.ttf", math.floor(config.display.width * 0.012)),
-		tiny = love.graphics.newFont("data/art/font/PixelOperator8.ttf", math.floor(config.display.width * 0.019)),
-		small = love.graphics.newFont("data/art/font/PixelOperator8.ttf", math.floor(config.display.width * 0.03)),
-		large = love.graphics.newFont("data/art/font/PixelOperator8.ttf", math.floor(config.display.width * 0.04))
+		micro = love.graphics.newFont("data/art/font/joystix_monospace.ttf", math.floor(config.display.width * 0.012)),
+		tiny = love.graphics.newFont("data/art/font/joystix_monospace.ttf", math.floor(config.display.width * 0.019)),
+		small = love.graphics.newFont("data/art/font/joystix_monospace.ttf", math.floor(config.display.width * 0.04)),
+		large = love.graphics.newFont("data/art/font/joystix_monospace.ttf", math.floor(config.display.width * 0.06))
 	}
 end
 
@@ -222,6 +223,7 @@ function love.draw()
 			lg.setFont(font.micro)
 			lg.print("FPS: "..love.timer.getFPS()..
 					 "\nFrameTime: "..love.timer.getDelta()..
+					 "\nDetected Platform: "..platform..
 					 "\nSpawned Entities: "..entity:count()..
 					 "\nDraw Calls: "..stats.drawcalls..
 					 "\nCanvas Switch: "..stats.canvasswitches..

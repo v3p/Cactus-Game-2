@@ -4,17 +4,29 @@ local ui = {
 }
 
 function ui:load()
-	self.atlas = lg.newImage("data/art/img/ui.png")
-	self.quads = loadAtlas("data/art/img/ui.png", assetSize, assetSize, 0)
+	self.atlas, self.quad = loadAtlas("data/art/img/ui.png", assetSize, assetSize, 0)
 	self.smoof = 6
 	self.smoofSnap = 1
 end
 
 
 --UTILITY SHIT
-
 function ui:clear()
 	self.list = {}
+end
+
+function ui.getTextDimensions(text, font)
+	local width = font:getWidth(text)
+	local height = (font:getAscent() - font:getDescent())
+
+	return width, height
+end
+
+function ui:printCenter(font, text, x, y, width, height)
+	local textWidth, textHeight = ui.getTextDimensions(text, font)
+
+	lg.setFont(font)
+	lg.print(text, x + (width / 2) - (textWidth / 2), y + (height / 2) - (textHeight / 2))
 end
 
 --Wrapper for lg.newQuad because it makes shit simpler
@@ -42,7 +54,8 @@ end
 --Creates image object.
 --Source: Source image, quad: Quad. X & y: Position
 --hideDirection: "top", "bottom", "left", "right", Decies where the object goes when hidden
-function ui:newImage(quad, x, y, scale, hideDirection)
+function ui:newImage(func, quad, x, y, scale, hideDirection)
+	func = func or false
 	local _x, _y, width, height = quad:getViewport()
 	width = width * scale
 	height = height * scale
@@ -50,6 +63,7 @@ function ui:newImage(quad, x, y, scale, hideDirection)
 	local hideX, hideY = self:getHidePosition(hideDirection, x, y, width, height)
 	self.list[#self.list + 1] = {
 		type = "image",
+		func = func,
 		quad = quad,
 		hideDirection = hideDirection,
 		--Status
@@ -77,13 +91,68 @@ function ui:newImage(quad, x, y, scale, hideDirection)
 	return self.list[#self.list]
 end
 
-function ui:newButton(func, text, x, y, scale, width, hideDirection)
+function ui:newButton(func, text, x, y, width, height, hideDirection)
+	local hideX, hideY = self:getHidePosition(hideDirection, x, y, width, height)
 	self.list[#self.list + 1] = {
 		type = "button",
 		func = func,
-		text = text
+		text = text,
+		hideDirection = hideDirection,
+		font = font.small,
+		--Status
+		hidden = false,
+		offScreen = false,
 
+		width = width,
+		height = height,
+		--Current position
+		x = x,
+		y = y,
+		--target position
+		targetX = x,
+		targetY = y,
+		--Visible position
+		visibleX = x,
+		visibleY = y,
+		--Hidden position
+		hiddenX = hideX,
+		hiddenY = hideY
 	}
+
+	return self.list[#self.list]
+end
+
+function ui:newText(func, text, x, y, font, color, hideDirection)
+	local width, height = ui.getTextDimensions(text, font)
+	local hideX, hideY = self:getHidePosition(hideDirection, x, y, width, height)
+	self.list[#self.list + 1] = {
+		type = "text",
+		func = func,
+		text = text,
+		hideDirection = hideDirection,
+		font = font,
+		color = color,
+		--Status
+		hidden = false,
+		offScreen = false,
+
+		width = width,
+		height = height,
+		--Current position
+		x = x,
+		y = y,
+		--target position
+		targetX = x,
+		targetY = y,
+		--Visible position
+		visibleX = x,
+		visibleY = y,
+		--Hidden position
+		hiddenX = hideX,
+		hiddenY = hideY
+	}
+
+	return self.list[#self.list]
 end
 
 --CONTROLLING SHIT
@@ -128,6 +197,10 @@ function ui:center(element, x, y)
 	element.hiddenY = hideY
 end
 
+function ui:setFont(element, font)
+	element.font = font
+end
+
 --CALLBACK SHIT
 
 function ui:update(dt)
@@ -151,6 +224,28 @@ function ui:draw()
 		if v.type == "image" then
 			lg.setColor(1, 1, 1, 1)
 			lg.draw(self.atlas, v.quad, v.x, v.y, 0, v.scale, v.scale)
+		elseif v.type == "button" then
+			lg.setColor(1, 1, 1, 1)
+			--LEFT
+			lg.draw(self.atlas, self.quad[1], v.x, v.y, 0, v.height / assetSize, v.height / assetSize)
+
+			--RIGHT
+			lg.draw(self.atlas, self.quad[3], (v.x + v.width) - v.height, v.y, 0, v.height / assetSize, v.height / assetSize)
+		
+			--CENTER
+			local edge = (v.height / assetSize) * 3
+			local gap = (v.x + v.width) - edge - (v.x + edge)
+			if gap > 0 then
+				lg.draw(self.atlas, self.quad[2], (v.x + edge), v.y, 0, gap / assetSize, v.height / assetSize)
+			end
+
+			--Text
+			lg.setColor(1, 1, 1, 1)
+			self:printCenter(v.font, v.text, v.x, v.y, v.width, v.height)
+		elseif v.type == "text" then
+			lg.setColor(v.color)
+			lg.setFont(v.font)
+			lg.print(v.text, v.x, v.y)
 		end
 	end
 end
@@ -163,7 +258,17 @@ function ui:drawBounds()
 end
 
 function ui:press(x, y)
+	local pressed = false
+	for i,v in ipairs(self.list) do
+		if pointInRect(x, y, v.x, v.y, v.width, v.height) then
+			if type(v.func) == "function" then
+				v.func(v)
+				pressed = true
+			end
+		end
+	end
 
+	return pressed
 end
 
 function ui:release(x, y)

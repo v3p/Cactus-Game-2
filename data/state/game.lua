@@ -1,11 +1,96 @@
 local game = {}
 
+--USER INTERFACE
+--Button callbacks
+function startButton(e)
+	game:start()
+end
+
+function resetButton(e)
+	game:reset()
+end
+
+function exitButton(e)
+	love.event.push("quit")
+end
+
+--Screen creation
+function game:createStartup()
+	--UI
+	ui:clear()
+
+	--Title
+	local titleQuad = ui:newQuad(0, 16, 76, 31)
+	--ui:newImage(quad, x, y, scale, hideDirection)
+	self.title = ui:newImage(false, titleQuad, 0, lg.getHeight() * 0.1, (drawSize / assetSize) * 1.4, "left")
+
+	ui:center(self.title, true, false)
+	ui:hide(self.title, true)
+	ui:show(self.title)
+
+	--Start button
+	--ui:newButton(func, text, x, y, width, height, hideDirection)
+	self.startButton = ui:newButton(startButton, "Start", 0, lg.getHeight() * 0.6, drawSize * 5, drawSize * 2, "right")
+
+	ui:setFont(self.startButton, font.large)
+
+	ui:center(self.startButton, true, false)
+	ui:hide(self.startButton, true)
+	ui:show(self.startButton)
+
+	--Exit button
+	self.exitButton = ui:newImage(exitButton, ui.quad[4], drawSize * 0.1, lg.getHeight() - (drawSize * 1.7), (drawSize / assetSize) * 1.6, "bottom")
+
+	ui:hide(self.exitButton, true)
+	ui:show(self.exitButton)
+
+	---func, text, x, y, font, color, hideDirection)
+	self.subtitle = ui:newText(false, SUBTITLE, 0, lg.getHeight() * 0.45, font.tiny, {0.9, 0.1, 0.1}, "top")
+	ui:center(self.subtitle, true, false)
+	ui:hide(self.subtitle, true)
+	ui:show(self.subtitle)
+end
+
+function game:createIngame()
+	ui:hide(self.title)
+	ui:hide(self.startButton)
+	ui:hide(self.exitButton)
+	ui:hide(self.subtitle)
+end
+
+function game:createEndgame()
+	--Hide the ingame shit here
+
+	self.resetButton = ui:newButton(resetButton, "RESET", 0, lg.getHeight() * 0.6, drawSize * 5, drawSize * 2, "right")
+
+	ui:setFont(self.resetButton, font.large)
+
+	ui:center(self.resetButton, true, false)
+	ui:hide(self.resetButton, true)
+	ui:show(self.resetButton)
+
+	self.gameOverText = ui:newText(false, "you got dead", 0, lg.getHeight() * 0.2, font.large, {0.9, 0.1, 0.1}, "top")
+	ui:center(self.gameOverText, true, false)
+	ui:hide(self.gameOverText, true)
+	ui:show(self.gameOverText)
+
+	self.scoreText = ui:newText(false, "You made it "..(math.floor(self.distance * 100) / 100).." meters", 0, lg.getHeight() * 0.4, font.small, {0.9, 0.9, 0.9}, "left")
+	ui:center(self.scoreText, true, false)
+	ui:hide(self.scoreText, true)
+	ui:show(self.scoreText)
+
+	ui:show(self.exitButton)
+
+end
+
 function game:load()
 	self.canvas = {
 		entity = love.graphics.newCanvas(config.display.width, config.display.height),
 		gui = love.graphics.newCanvas(config.display.width, config.display.height),
 		shader = love.graphics.newCanvas(config.display.width, config.display.height)
 	}
+
+	self.button = {}
 
 	self.first = true
 	sky:load()
@@ -18,16 +103,7 @@ function game:reset()
 	light:load()
 	sky:createLights()
 
-	--UI
-	ui:clear()
-	--Title
-	local titleQuad = ui:newQuad(0, 16, 76, 31)
-	--ui:newImage(quad, x, y, scale, hideDirection)
-	self.title = ui:newImage(titleQuad, 0, lg.getHeight() * 0.2, (drawSize / assetSize) * 1.4, "left")
-
-	ui:center(self.title, true, false)
-	ui:hide(self.title, true)
-	ui:show(self.title)
+	self:createStartup()
 
 	--Creating World
 	self.ground = {
@@ -89,10 +165,10 @@ function game:reset()
 end
 
 function game:start()
+	self:createIngame()
 	self.started = true
 	self.player:run()
 	self.player:show()
-	ui:hide(self.title)
 	sound:play("run")
 
 end
@@ -103,6 +179,8 @@ function game:lose()
 	sound:play("game_over")
 	screenEffect:shake()
 	self.player:hide()
+
+	self:createEndgame()
 
 	--Input Delay
 	self.takeInput = false
@@ -274,6 +352,8 @@ function game:update(dt)
 
 	end
 
+	--Dead slow motion
+	ui:update(dt)
 	if self.ended then
 		dt = dt / 8
 	end
@@ -283,7 +363,6 @@ function game:update(dt)
 	entity:update(dt)
 	physics:update(dt)
 	sound:update(dt)
-	ui:update(dt)
 
 	if self.ended then
 		dt = dt * 8
@@ -411,8 +490,10 @@ end
 function game:keypressed(key)
 	if key == "o" then
 		ui:show(self.title)
+		ui:show(self.startButton)
 	elseif key == "p" then
 		ui:hide(self.title)
+		ui:hide(self.startButton)
 	end
 
 
@@ -463,25 +544,15 @@ function game:mousepressed(x, y, key)
 	if platform == "pc" then
 		self:input(x, y, "mouse")
 	end
-
-	--popup:new(heart, config.display.width / 2, config.display.height / 2)
 end
 
 function game:input(x, y, t)
 	if self.takeInput then
-		if y < self.ground.y then
-			if t == "press" or t == "mouse" then
-				if self.started and not self.paused and not self.ended then
-					self.player:jump()
-				else
-					ui:press(x, y)
-				end
-			end
-		else
-			if t == "release" or t == "mouse" then
-				for i,v in pairs(self.textObject) do
-					v:release(x, y)
-				end
+		if not ui:press(x, y) then
+			if y < self.ground.y then
+				self.player:jump()
+			else
+				self.player:slide()
 			end
 		end
 	end
