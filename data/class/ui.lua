@@ -54,7 +54,7 @@ end
 --Creates image object.
 --Source: Source image, quad: Quad. X & y: Position
 --hideDirection: "top", "bottom", "left", "right", Decies where the object goes when hidden
-function ui:newImage(func, quad, x, y, scale, hideDirection)
+function ui:newImage(func, atlas, quad, x, y, scale, hideDirection)
 	func = func or false
 	local _x, _y, width, height = quad:getViewport()
 	width = width * scale
@@ -64,6 +64,7 @@ function ui:newImage(func, quad, x, y, scale, hideDirection)
 	self.list[#self.list + 1] = {
 		type = "image",
 		func = func,
+		atlas = atlas,
 		quad = quad,
 		hideDirection = hideDirection,
 		--Status
@@ -336,7 +337,7 @@ function ui:draw()
 
 		if v.type == "image" then
 			lg.setColor(1, 1, 1, 1)
-			lg.draw(self.atlas, v.quad, v.x, v.y, 0, v.scale, v.scale)
+			lg.draw(v.atlas, v.quad, v.x, v.y, 0, v.scale, v.scale)
 		elseif v.type == "button" then
 			lg.setColor(1, 1, 1, 1)
 			--LEFT

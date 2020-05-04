@@ -32,6 +32,8 @@ end
 
 function backButton(e)
 	ui:hideScreen("settings")
+	ui:hideScreen("skin")
+	ui:hideScreen("stats")
 	ui:showScreen("main")
 end
 
@@ -59,6 +61,62 @@ function toggleSFX(e)
 	setSoundFX()
 end
 
+function toggleDev(e)
+    config.devMode.enabled = e.checked
+end
+
+function skinsButton(e)
+	ui:hideScreen("main")
+	ui:showScreen("skin")
+end
+
+function statsButton(e)
+	ui:hideScreen("main")
+	ui:showScreen("stats")
+end
+
+function lastButton(e)
+	local change = true
+	config.game.currentSkin = config.game.currentSkin - 1
+	if config.game.currentSkin < 1 then 
+		config.game.currentSkin = 1
+		change = false
+	end
+
+	if change then
+		game.player:setSkin(config.game.currentSkin)
+
+		local q = 1 + (game.player.currentSkin - 1) * 8
+		game.preview.quad = game.player.quad[q]
+
+		local name = game.player.skinNames[game.player.currentSkin]
+		game.skinName.text = name
+
+		screenEffect:ripple(lg.getWidth() / 2, lg.getHeight() / 2, 12, drawSize * 3, {1, 1, 1}, false)
+	end
+end
+
+function nextButton(e)
+	local change = true
+	config.game.currentSkin = config.game.currentSkin + 1
+	if config.game.currentSkin > config.game.unlockedSkins then 
+		config.game.currentSkin = config.game.unlockedSkins
+		change = false
+	end
+	
+	if change then
+		game.player:setSkin(config.game.currentSkin)
+
+		local q = 1 + (game.player.currentSkin - 1) * 8
+		game.preview.quad = game.player.quad[q]
+
+		local name = game.player.skinNames[game.player.currentSkin]
+		game.skinName.text = name
+
+		screenEffect:ripple(lg.getWidth() / 2, lg.getHeight() / 2, 12, drawSize * 3, {1, 1, 1}, false)
+	end
+end
+
 --Screen creation
 function game:createStartup()
 	--UI
@@ -73,7 +131,7 @@ function game:createStartup()
 		--Title
 	local titleQuad = ui:newQuad(0, 16, 77, 32)
 	--ui:newImage(quad, x, y, scale, hideDirection)
-	self.title = ui:newImage(false, titleQuad, 0, lg.getHeight() * 0.1, (drawSize / assetSize) * 1.4, "left")
+	self.title = ui:newImage(false, ui.atlas, titleQuad, 0, lg.getHeight() * 0.1, (drawSize / assetSize) * 1.4, "left")
 
 	ui:center(self.title, true, false)
 	ui:hide(self.title, true)
@@ -90,32 +148,137 @@ function game:createStartup()
 	ui:setScreen(self.startButton, "main")
 
 	--Exit button
-	self.exitButton = ui:newImage(exitButton, ui.quad[4], drawSize * 0.1, lg.getHeight() - (drawSize * 1.7), (drawSize / assetSize) * 1.6, "bottom")
+	self.exitButton = ui:newImage(exitButton, ui.atlas, ui.quad[4], drawSize * 0.1, lg.getHeight() - (drawSize * 1.7), (drawSize / assetSize) * 1.6, "bottom")
 
 	ui:hide(self.exitButton, true)
 	ui:setScreen(self.exitButton, "main")
 
-	--Exit button
-	self.settingsButton = ui:newImage(settingsButton, ui.quad[5], drawSize * 0.1, drawSize * 0.1, (drawSize / assetSize) * 1.6, "top")
+	--settings button
+	self.settingsButton = ui:newImage(settingsButton, ui.atlas, ui.quad[5], drawSize * 0.1, drawSize * 0.1, (drawSize / assetSize) * 1.6, "top")
 
 	ui:hide(self.settingsButton, true)
 	ui:setScreen(self.settingsButton, "main")
+	
+	--skins
+	self.skinsButton = ui:newImage(skinsButton, ui.atlas, ui.quad[7], drawSize * 0.1, drawSize * 1.8, (drawSize / assetSize) * 1.6, "top")
+
+	ui:hide(self.skinsButton, true)
+	ui:setScreen(self.skinsButton, "main")
+	
+	--ststs
+	self.statsButton = ui:newImage(statsButton, ui.atlas, ui.quad[8], drawSize * 0.1, drawSize * 3.5, (drawSize / assetSize) * 1.6, "top")
+
+	ui:hide(self.statsButton, true)
+	ui:setScreen(self.statsButton, "main")
 
 	--Creating the settings screen
 	self:createSettings()
+	self:createSkinSelection()
+	self:createStats()
+end
+
+function game:createSkinSelection()
+		--Panel
+	self.skinPanel = ui:newPanel({0, 0, 0, 0.7}, 0, 0, lg.getWidth(), lg.getHeight(), "bottom")
+	ui:center(self.skinPanel, true, false)
+	ui:hide(self.skinPanel, true)
+	ui:setScreen(self.skinPanel, "skin")
+
+
+	--back button
+	self.backButton = ui:newImage(backButton, ui.atlas, ui.quad[6], drawSize * 0.1, lg.getHeight() - (drawSize * 1.7), (drawSize / assetSize) * 1.6, "bottom")
+
+	ui:hide(self.backButton, true)
+	ui:setScreen(self.backButton, "skin")
+
+
+	---func, text, x, y, font, color, hideDirection)
+	self.title = ui:newText(false, "Select skin", 0, lg.getHeight() * 0.01, font.small, convertColor(228, 61, 61, 255), "bottom")
+	ui:center(self.title, true, false)
+	ui:hide(self.title, true)
+	ui:setScreen(self.title, "skin")
+
+	--Preview
+	--ui:newImage(func, atlas, quad, x, y, scale, hideDirection)
+	local q = (self.player.currentSkin - 1) * 8 + 1
+	self.preview = ui:newImage(nil, self.player.atlas, self.player.quad[q], 0, 0, drawSize * 0.2, "bottom")
+	ui:center(self.preview, true, true)
+	ui:hide(self.preview, true)
+	ui:setScreen(self.preview, "skin")
+
+	--Name
+	local name = self.player.skinNames[self.player.currentSkin]
+	self.skinName = ui:newText(false, name, 0, lg.getHeight() * 0.7, font.small, convertColor(228, 61, 61, 255), "bottom")
+	ui:center(self.skinName, true, false)
+	ui:hide(self.skinName, true)
+	ui:setScreen(self.skinName, "skin")
+
+	--Last button
+	self.lastButton = ui:newImage(lastButton, ui.atlas, ui.quad[22], lg.getWidth() * 0.3, 0, (drawSize / assetSize) * 1.6, "left")
+
+	ui:center(self.lastButton, false, true)
+	ui:hide(self.lastButton, true)
+	ui:setScreen(self.lastButton, "skin")
+
+	--Next button
+	self.nextButton = ui:newImage(nextButton, ui.atlas, ui.quad[23], lg.getWidth() * 0.6, 0, (drawSize / assetSize) * 1.6, "right")
+
+	ui:center(self.nextButton, false, true)
+	ui:hide(self.nextButton, true)
+	ui:setScreen(self.nextButton, "skin")
+end
+
+function game:createStats()
+	--ui:clear()
+	--Panel
+	self.settingsPanel = ui:newPanel({0, 0, 0, 0.4}, 0, 0, lg.getWidth() / 2, lg.getHeight(), "bottom")
+	ui:center(self.settingsPanel, true, false)
+	ui:hide(self.settingsPanel, true)
+	ui:setScreen(self.settingsPanel, "stats")
+
+
+	--back button
+	self.backButton = ui:newImage(backButton, ui.atlas, ui.quad[6], drawSize * 0.1, lg.getHeight() - (drawSize * 1.7), (drawSize / assetSize) * 1.6, "bottom")
+
+	ui:hide(self.backButton, true)
+	ui:setScreen(self.backButton, "stats")
+
+
+	---func, text, x, y, font, color, hideDirection)
+	self.subtitle = ui:newText(false, "Statistics", 0, lg.getHeight() * 0.01, font.small, convertColor(228, 61, 61, 255), "bottom")
+	ui:center(self.subtitle, true, false)
+	ui:hide(self.subtitle, true)
+	ui:setScreen(self.subtitle, "stats")
+
+	local statString = ""
+	for i,v in pairs(config.stats) do
+		statString = statString..v.name.." = "..v.value
+		if v.unit then
+			statString = statString.." "..v.unit
+		end
+		statString = statString.."\n"
+	end
+
+
+	--Stats
+	self.stats = ui:newText(false, statString, 0, lg.getHeight() * 0.1, font.tiny, convertColor(61, 228, 61, 255), "bottom")
+	ui:center(self.stats, true, false)
+	ui:hide(self.stats, true)
+	ui:setScreen(self.stats, "stats")
+
 end
 
 function game:createSettings()
 	--ui:clear()
 	--Panel
-	self.mainPanel = ui:newPanel({0, 0, 0, 0.4}, 0, 0, lg.getWidth() / 2, lg.getHeight(), "bottom")
-	ui:center(self.mainPanel, true, false)
-	ui:hide(self.mainPanel, true)
-	ui:setScreen(self.mainPanel, "settings")
+	self.settingsPanel = ui:newPanel({0, 0, 0, 0.4}, 0, 0, lg.getWidth() / 2, lg.getHeight(), "bottom")
+	ui:center(self.settingsPanel, true, false)
+	ui:hide(self.settingsPanel, true)
+	ui:setScreen(self.settingsPanel, "settings")
 
 
 	--back button
-	self.backButton = ui:newImage(backButton, ui.quad[6], drawSize * 0.1, lg.getHeight() - (drawSize * 1.7), (drawSize / assetSize) * 1.6, "bottom")
+	self.backButton = ui:newImage(backButton, ui.atlas, ui.quad[6], drawSize * 0.1, lg.getHeight() - (drawSize * 1.7), (drawSize / assetSize) * 1.6, "bottom")
 
 	ui:hide(self.backButton, true)
 	ui:setScreen(self.backButton, "settings")
@@ -145,17 +308,23 @@ function game:createSettings()
 	ui:setScreen(self.toggleMusic, "settings")
 	self.toggleMusic.checked = config.sound.music
 
-		---TOGGLE MUSIC
+		---TOGGLE SFX
 	self.toggleSFX = ui:newCheckBox(toggleSFX, "Sound effects", lg.getWidth() * 0.3, lg.getHeight() * 0.52, (drawSize / assetSize) * 1, "right")
 	ui:hide(self.toggleSFX, true)
 	ui:setScreen(self.toggleSFX, "settings")
 	self.toggleSFX.checked = config.sound.soundFX
+   
+   --toggle devmodr
+    self.toggleDev = ui:newCheckBox(toggleDev, "Developer mode", lg.getWidth() * 0.3, lg.getHeight() * 0.64, (drawSize / assetSize) * 1, "right")
+	ui:hide(self.toggleDev, true)
+	ui:setScreen(self.toggleDev, "settings")
+	self.toggleDev.checked = config.devMode.enabled
 
 end
 
 function game:createIngame()
 	--DISTANCE
-	self.distanceLogo = ui:newImage(false, ui.quad[25], lg.getWidth() * 0.01, lg.getHeight() * 0.85, (drawSize / assetSize) * 1.4, "left")
+	self.distanceLogo = ui:newImage(false, ui.atlas, ui.quad[25], lg.getWidth() * 0.01, lg.getHeight() * 0.85, (drawSize / assetSize) * 1.4, "left")
 	ui:hide(self.distanceLogo, true)
 	ui:setScreen(self.distanceLogo, "ingame")
 
@@ -164,7 +333,7 @@ function game:createIngame()
 	ui:setScreen(self.ingameScore, "ingame")
 
 	--LIVES
-	self.livesLogo = ui:newImage(false, ui.quad[26], lg.getWidth() * 0.01, lg.getHeight() * 0.75, (drawSize / assetSize) * 1.4, "left")
+	self.livesLogo = ui:newImage(false, ui.atlas, ui.quad[26], lg.getWidth() * 0.01, lg.getHeight() * 0.75, (drawSize / assetSize) * 1.4, "left")
 	ui:hide(self.livesLogo, true)
 	ui:setScreen(self.livesLogo, "ingame")
 
@@ -177,7 +346,7 @@ function game:createEndgame()
 	--Destroy
 	ui:clear()
 
-	self.resetButton = ui:newButton(resetButton, "try again", font.small, 0, lg.getHeight() * 0.6, drawSize * 5, drawSize * 2, "left")
+	self.resetButton = ui:newButton(resetButton, "try again", font.tiny, 0, lg.getHeight() * 0.6, drawSize * 5, drawSize * 2, "left")
 
 	--ui:setFont(self.resetButton, font.large)
 
@@ -186,17 +355,17 @@ function game:createEndgame()
 	ui:setScreen(self.resetButton, "endgame")
 
 
-	self.gameOverText = ui:newText(false, gameOverLines[math.random(#gameOverLines)], 0, lg.getHeight() * 0.2, font.large, {0.8, 0.2, 0.2}, "top")
+	self.gameOverText = ui:newText(false, gameOverLines[math.random(#gameOverLines)], 0, lg.getHeight() * 0.05, font.large, {0.8, 0.2, 0.2}, "top")
 	ui:center(self.gameOverText, true, false)
 	ui:hide(self.gameOverText, true)
 	ui:setScreen(self.gameOverText, "endgame")
 
-	self.scoreText = ui:newText(false, "You made it "..(math.floor(self.distance * 100) / 100).." meters", 0, lg.getHeight() * 0.85, font.small, {0.1, 0.9, 0.2}, "left")
+	self.scoreText = ui:newText(false, "You made it "..(math.floor(self.distance * 100) / 100).." meters", 0, lg.getHeight() * 0.45, font.small, {0.1, 0.9, 0.2}, "left")
 	ui:center(self.scoreText, true, false)
 	ui:hide(self.scoreText, true)
 	ui:setScreen(self.scoreText, "endgame")
 
-	self.exitButton = ui:newImage(exitButton, ui.quad[4], drawSize * 0.1, lg.getHeight() - (drawSize * 1.7), (drawSize / assetSize) * 1.6, "bottom")
+	self.exitButton = ui:newImage(exitButton, ui.atlas, ui.quad[4], drawSize * 0.1, lg.getHeight() - (drawSize * 1.7), (drawSize / assetSize) * 1.6, "bottom")
 
 	ui:hide(self.exitButton, true)
 	ui:setScreen(self.exitButton, "endgame")
@@ -241,9 +410,6 @@ function game:load()
 
 	self.first = true
 
-	--Creating UI
-	self:createStartup()
-
 	self:reset()
 end
 
@@ -281,6 +447,7 @@ function game:reset()
 	entity:clear()
 
 	self.player = entity:spawn("player", {ground = world.ground.y, gameSpeed = self.gameSpeed}, "player")
+	self.player:setSkin(config.game.currentSkin)
 
 	self.trip = false
 	self.tripDuration = 8
@@ -307,6 +474,9 @@ function game:reset()
 end
 
 function game:start()
+	ui:hideScreen("settings")
+	ui:hideScreen("skin")
+	ui:hideScreen("stats")
 	self:createIngame()
 	self.started = true
 	self.player:run()
@@ -330,11 +500,11 @@ function game:lose()
 	self.ended = true
 
 	--High score
-	if self.distance > config.stats.topDistance then
+	if self.distance > config.stats.topDistance.value then
 		self.newHighScore = true
-		config.stats.topDistance = math.floor(self.distance * 100) / 100
+		config.stats.topDistance.value = math.floor(self.distance * 100) / 100
 	end
-	config.stats.totalDistance = config.stats.totalDistance + math.floor(self.distance * 100) / 100
+	config.stats.totalDistance.value = config.stats.totalDistance.value + math.floor(self.distance * 100) / 100
 
 	saveConfig()
 	--sound:setVolume("hit", 0.1)
@@ -347,6 +517,9 @@ function game:lose()
 	ui:deleteScreen("endgame")
 	self:createEndgame()
 	ui:showScreen("endgame")
+
+	--Stats
+	config.stats.deaths.value = config.stats.deaths.value + 1
 end
 
 function game:pause()
@@ -377,7 +550,6 @@ function game:loseLife()
 end
 
 function game:startTrip()
-    self.player:setSkin()
 	if self.trip then
 		self.tripTick = self.tripDuration
 	else
@@ -387,6 +559,9 @@ function game:startTrip()
 		self.tripTick = self.tripDuration
 	end
 	sound:play("trip")
+
+	--Stats
+	config.stats.drugsTaken.value = config.stats.drugsTaken.value + 1
 end
 
 function game:stopTrip()
@@ -583,7 +758,7 @@ function game:drawTrip()
 	end)
 	love.graphics.setCanvas()
 
-	rgbSplit:send("dir", {drawSize * (self.tripMagnitude * 0.0004), 0})
+	rgbSplit:send("dir", {drawSize * (self.tripMagnitude * 0.0002), 0})
 	rgbSplit:draw(function() 
 		wave:draw(function()
 			setColor(255, 255, 255, 255)

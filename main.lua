@@ -31,7 +31,7 @@ function love.load()
 	state:loadStates("data/state")
 
 	--Setting up / Loading config file
-	local w, h = 1280, 720
+	local w, h = 960, 540
 	if platform == "mobile" then
 		w, h = love.window.getDesktopDimensions()
 	end
@@ -59,14 +59,16 @@ function love.load()
 			toggleUIBounds = "f5"
 		},
 		stats = {
-			topDistance = 0,
-			totalDistance = 0,
-			jumps = 0,
-			runs = 0
+			topDistance = {value = 0, name = "Top distance", unit = "meters"},
+			totalDistance = {value = 0, name = "Total distance", unit = "meters"},
+			jumps = {value = 0, name = "Jumps", unit = false},
+			deaths = {value = 0, name = "Deaths", unit = false},
+			drugsTaken = {value = 0, name = "Drugs taken", unit = false},
+			timeSliding = {value = 0, name = "Time sliding", unit = "seconds"},
 		},
 		game = {
-			unlockedSkins = 1,
-
+			unlockedSkins = 7,
+			currentSkin = 1
 		},
 		sound = {
 			volume = 1,
@@ -74,20 +76,22 @@ function love.load()
 			soundFX = true
 		},
 		devMode = {
-			enabled = true,
+			enabled = false,
 			showCollisions = true,
 			showStats = true,
 			showUIBounds = true
 		}
 	}
 
-	--fs.remove("config.lua")	
+	fs.remove("config.lua")	
 	--Creating config file
 	if love.filesystem.getInfo("config.lua") then
 		config = fs.load("config.lua")()
 	else
 		saveConfig()
 	end
+
+	config.game.unlockedSkins = 8
 
 	--Creating screenshot folder
 	if not love.filesystem.getInfo("screenshot") then
@@ -112,7 +116,7 @@ function love.load()
 	--atlas = love.graphics.newImage("data/art/img/atlas.png")
 
 
-	console:init(0, 0, config.display.width, config.display.height, true, font.tiny)
+	console:init(0, 0, config.display.width, config.display.height, true, font.console)
 	console:setVisible(false)
 
 	--Loading sounds
@@ -235,7 +239,8 @@ function loadFont()
 		micro = love.graphics.newFont("data/art/font/joystix_monospace.ttf", math.floor(config.display.width * 0.012)),
 		tiny = love.graphics.newFont("data/art/font/joystix_monospace.ttf", math.floor(config.display.width * 0.019)),
 		small = love.graphics.newFont("data/art/font/joystix_monospace.ttf", math.floor(config.display.width * 0.04)),
-		large = love.graphics.newFont("data/art/font/joystix_monospace.ttf", math.floor(config.display.width * 0.06))
+		large = love.graphics.newFont("data/art/font/joystix_monospace.ttf", math.floor(config.display.width * 0.06)),
+		console = love.graphics.newFont("data/art/font/VCR_OSD_MONO.ttf", math.floor(config.display.width * 0.019))
 	}
 end
 
@@ -270,12 +275,12 @@ function love.draw()
 			local stats = love.graphics.getStats()
 
 			lg.setColor(0, 0, 0, 0.8)
-			lg.rectangle("fill", 0, 0, lg.getWidth() / 2, lg.getHeight() * 0.3)
+			lg.rectangle("fill", 0, 0, lg.getWidth() / 3, lg.getHeight() * 0.3)
 
 			lg.setColor(1, 1, 0, 1)
 			lg.setFont(font.micro)
 			lg.print("FPS: "..love.timer.getFPS()..
-					 "\nFrameTime: "..love.timer.getDelta()..
+					 --"\nFrameTime: "..love.timer.getDelta()..
 					 "\nDetected Platform: "..platform..
 					 "\nSpawned Entities: "..entity:count()..
 					 "\nDraw Calls: "..stats.drawcalls..
@@ -327,7 +332,7 @@ function love.keypressed(key)
 	if key == "escape" then
 		love.event.push("quit") 
 	elseif key == "f" then
-		fullscreen()
+		--fullscreen()
 	end
 
 	if console:getVisible() then

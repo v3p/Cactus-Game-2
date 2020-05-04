@@ -1,6 +1,9 @@
 local sky = {}
 
 function sky:load()
+	--Loading atlas
+	self.atlas, self.quad = loadAtlas("data/art/img/environment.png", assetSize, assetSize, 0)
+
 	--World center. The sun & moon revolve around this point
 	self.centerX = lg.getWidth() / 2
 	self.centerY = lg.getHeight()
@@ -9,7 +12,6 @@ function sky:load()
 
 	--Sun
 	self.sun = {
-		quad = love.graphics.newQuad(0, 16, 16, 16, env:getWidth(), env:getHeight()),
 		x = 0,
 		y = 0,
 		angle = 0,
@@ -18,19 +20,12 @@ function sky:load()
 
 	--Moon
 	self.moon = {
-		quad = love.graphics.newQuad(0, 0, 16, 16, env:getWidth(), env:getHeight()),
 		x = 0,
 		y = 0,
 		angle = 0
 	}
 
 	self.stars = self:generateStars(100)
-
-	--Cloud stuff
-	cloudImg = {
-		love.graphics.newQuad(16, 0, 48, 16, env:getWidth(), env:getHeight()),
-		love.graphics.newQuad(64, 0, 32, 16, env:getWidth(), env:getHeight())
-	}
 
 	--Clouds
 	self.cloud = {
@@ -39,8 +34,8 @@ function sky:load()
 		speed = {5, 20},
 		height = {0, lg.getHeight() * 0.4},
 		img = {
-			love.graphics.newQuad(16, 0, 48, 16, env:getWidth(), env:getHeight()),
-			love.graphics.newQuad(64, 0, 32, 16, env:getWidth(), env:getHeight())
+			love.graphics.newQuad(16, 0, 48, 16, self.atlas:getWidth(), self.atlas:getHeight()),
+			love.graphics.newQuad(64, 0, 32, 16, self.atlas:getWidth(), self.atlas:getHeight())
 		},
 		list = {}
 	}
@@ -100,11 +95,12 @@ function sky:createLights()
 end
 
 function sky:update(dt)
-	--self.time = (math.pi * 2) * fmath.normal(love.mouse.getX(), 0, lg.getWidth())
 	self.time = self.time + self.timeScale * dt
 	if self.time > math.pi * 2 then
 		self.time = 0
 	end
+
+	--self.time = (math.pi * 2) * fmath.normal(love.mouse.getX(), 0, lg.getWidth())
 
 	--Sun & Moon position
 	self.moon.angle = self.time + math.pi
@@ -153,14 +149,14 @@ function sky:draw()
 
 	--Moon & sun
 	lg.setColor(1, 1, 1, 1)
-	lg.draw(env, self.moon.quad, self.moon.x, self.moon.y, 0, drawSize / assetSize, drawSize / assetSize, assetSize / 2, assetSize / 2)
-	lg.draw(env, self.sun.quad, self.sun.x, self.sun.y, 0, drawSize / assetSize, drawSize / assetSize, assetSize / 2, assetSize / 2)
+	lg.draw(self.atlas, self.quad[1], self.moon.x, self.moon.y, 0, drawSize / assetSize, drawSize / assetSize, assetSize / 2, assetSize / 2)
+	lg.draw(self.atlas, self.quad[9], self.sun.x, self.sun.y, 0, drawSize / assetSize, drawSize / assetSize, assetSize / 2, assetSize / 2)
 
 	--Clouds
 	for i,v in ipairs(self.cloud.list) do
 		local color = 0.4 + (fmath.normal(self.sun.y, self.orbitRadius, -self.orbitRadius) * 0.6)
 		lg.setColor(color, color, color, 0.8)
-		lg.draw(env, self.cloud.img[v.img], v.x, v.y, 0, drawSize / assetSize, drawSize / assetSize)
+		lg.draw(self.atlas, self.cloud.img[v.img], v.x, v.y, 0, drawSize / assetSize, drawSize / assetSize)
 	end
 
 

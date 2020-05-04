@@ -128,7 +128,7 @@ end
 
 function console.setAlpha(a)
 	local r, g, b, _a = love.graphics.getColor()
-	setColor(r, g, b, 255 * a)
+	setColor(r, g, b, a)
 end
 
 --==[[ < PUBLIC METHODS > ]]==--
@@ -176,7 +176,7 @@ function console:init(x, y, width, height, visible, font)
 			flashRate = 6
 		},
 		color = {
-			box = {0, 0, 0, 100},
+			box = {0, 0, 0, 200},
 			text = {255, 255, 255, 255}
 		},
 		history = {},
@@ -193,7 +193,7 @@ function console:init(x, y, width, height, visible, font)
 		totalTextHeight = 0,
 		scrollSpeed = 32,
 		color = {
-			box = {0, 0, 0, 50},
+			box = {0, 0, 0, 150},
 			text = {200, 200, 200, 255}
 		},
 		text = {},
@@ -236,6 +236,7 @@ function console:draw()
 		love.graphics.print(self.textBox.text, self.textBox.textX, self.textBox.y + self.margin.y)
 
 		--textBox indicator
+		lg.setColor(1, 1, 1, 1)
 		console.setAlpha(math.sin(self.textBox.indicator.t))
 		love.graphics.print(self.textBox.indicator.char, self.textBox.indicator.x, self.textBox.y + self.margin.y)
 		love.graphics.setScissor()

@@ -38,6 +38,7 @@ function cactus:col(c)
 		else
 			c.other:colResponse()
 			self.obsolete = true
+			screenEffect:ripple(self.x + (self.width / 2), self.y + (self.height / 2), 5, drawSize, convertColor(228, 61, 61, 255))
 		end
 	end
 end

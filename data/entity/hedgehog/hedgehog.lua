@@ -70,6 +70,7 @@ function hedgehog:col(c)
 			state:getState():lose()
 		else
 			c.other:colResponse()
+			screenEffect:ripple(self.x + (self.width / 2), self.y + (self.height / 2), 5, drawSize, convertColor(228, 61, 61, 255))
 			self.obsolete = true
 		end
 	end

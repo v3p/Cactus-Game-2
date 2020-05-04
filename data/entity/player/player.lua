@@ -31,16 +31,17 @@ function player:load(param)
 	self.distanceToGround = 0
 
 	--Image
-	self.skins = {
-		"Ninja",
-		"Classic",
-		"CJ",
+	self.skinNames = {
+		"dude from cactus game 1",
+		"american apparel",
+		"Carl Johnson",
 		"The streaker",
 		"Business casual",
-		"Deadpool",
-		"Batman"
+		"deadpool cosplayer",
+		"notman",
+		"benderman"
 	}
-	self.currentSkin = 3
+	self.currentSkin = 1
 	self.quadCount = 8
 
 	self.atlas, self.quad = loadAtlas("data/art/img/player.png", assetSize, assetSize, 0)
@@ -62,15 +63,18 @@ function player:load(param)
 	--Slide
 	self.slideTime = self.width * 0.03
 	self.slideTick = 0
+
+	--Used when tracking the "slidingTime" stat
+	self.slidingTime = 0
 	
-	self:setSkin()
+	--self:setSkin()
 end
 
 function player:createAnimations()
 	--Offsetting the quads to a different skin in the atlas
 	--"8" is the width of the atlas in tiles.
 	--this could probably be done smarter fix it dumbass.
-	local quadOffset = self.currentSkin * 8
+	local quadOffset = (self.currentSkin - 1) * 8
 	self.animation = {
 		run = animation.new(self.atlas, {self.quad[1 + quadOffset], self.quad[2 + quadOffset], self.quad[3 + quadOffset], self.quad[4 + quadOffset]}, 12),
 		jump = animation.new(self.atlas, {self.quad[2 + quadOffset]}, 1),
@@ -86,15 +90,15 @@ end
 function player:hide(del)
 	del = del or true
 	self.target_opacity = 0
-	screenEffect:ripple(self.x + (self.width / 2), self.y + (self.height / 2), 5, drawSize, {math.random(), math.random(), math.random()})
+	screenEffect:ripple(self.x + (self.width / 2), self.y + (self.height / 2), 5, drawSize, convertColor(228, 61, 61, 255))
 	if del then
 		self.obsolete = true
 	end
 end
 
 function player:setSkin(id)
-	id = id or math.random(#self.skins)
-	if id > tableLength(self.skins) - 1 then
+	id = id or math.random(#self.skinNames)
+	if id > tableLength(self.skinNames) then
 		id = 0
 	end
 	self.currentSkin = id
@@ -119,12 +123,22 @@ function player:slide()
 		self.sliding = true
 		self.canSlide = false
 		physics:changeItem(self, self.x, self.y, self.slideWidth, self.slideHeight)
+
+
+		--stats
+		self.slidingTime = love.timer.getTime()
 	end
 end
 function player:stopSlide()
-	self.sliding = false
-	self.canSlide = true
-	physics:changeItem(self, self.x, self.y, self.width, self.height)
+	if self.sliding then
+		self.sliding = false
+		self.canSlide = true
+		physics:changeItem(self, self.x, self.y, self.width, self.height)
+
+		--stats
+		local time = love.timer.getTime()
+		config.stats.timeSliding.value = config.stats.timeSliding.value + math.floor((time - self.slidingTime) * 100) / 100
+	end
 end
 
 function player:jump()
@@ -140,6 +154,9 @@ function player:jump()
 		sound:play(snd) 
 
 		sound:stop("run")
+
+		--Stats
+		config.stats.jumps.value = config.stats.jumps.value + 1
 	end
 end
 
@@ -224,6 +241,7 @@ function player:draw()
 		setColor(1, 0, 0, self.flashAlpha)
 		self.animation[self.currentAnimation]:draw(self.x + xOffset, self.y + yOffset, drawSize / assetSize, drawSize / assetSize)
 	end
+
 end
 
 function player:colResponse(c)
