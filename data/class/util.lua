@@ -95,6 +95,7 @@ function tableToString(tab, recursion)
 end
 
 function verticalGradient(width, height, ...)
+	local oldCanvas = lg.getCanvas()
 	local canvas = love.graphics.newCanvas(width, height)
 	local vertices = {}
 	for i,v in ipairs({...}) do
@@ -114,12 +115,13 @@ function verticalGradient(width, height, ...)
 	love.graphics.setCanvas(canvas)
 	setColor(255, 255, 255, 255)
 	love.graphics.draw(mesh, 0, 0)
-	love.graphics.setCanvas()
+	love.graphics.setCanvas(oldCanvas)
 	return canvas
 end
 
---Loads a texture atlas and splits the shit into quads
+--[[Loads a texture atlas and splits the shit into quads
 function loadAtlas(path, tileWidth, tileHeight, padding)
+	padding = padding or 0
 	if not love.filesystem.getInfo(path) then
 		error("'"..path.."' doesn't exist.")
 	end
@@ -140,6 +142,33 @@ function loadAtlas(path, tileWidth, tileHeight, padding)
 	end
 
 	return img, a
+end
+]]
+
+function loadAtlas(path, tileWidth, tileHeight, padding)
+	padding = padding or 0
+
+	if not love.filesystem.getInfo(path) then
+		error("'"..path.."' doesn't exist.")
+	end
+
+	local quad = {}
+	local atlas = love.graphics.newImage(path)
+	local width = math.floor(atlas:getWidth() / tileWidth)
+	local height = math.floor(atlas:getHeight() / tileHeight)
+
+	console:print("Width: "..width.." & height: "..height)
+	local i = 1
+
+	for y=0, height do
+		for x=0, width do
+			quad[i] = love.graphics.newQuad(x * tileWidth + padding, y * tileHeight + padding, tileWidth, tileHeight, atlas:getWidth(), atlas:getHeight())
+			i = i + 1
+		end
+		i = i - 1
+	end
+
+	return atlas, quad
 end
 
 function hsl(h, s, l, a)

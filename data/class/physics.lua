@@ -1,8 +1,8 @@
 local physics = {}
 
 function physics:load()
-	self.gravity = math.floor(config.display.height * 6)
-	self.maxVel = math.floor(config.display.height)
+	self.gravity = math.floor(config.display.height * 8)
+	self.maxVel = math.floor(config.display.height * 5)
 	self.world = bump.newWorld(64)
 end
 

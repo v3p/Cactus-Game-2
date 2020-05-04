@@ -13,7 +13,7 @@ function cactus:load(param)
 	self.gameSpeed = param.gameSpeed
 	self.gravity = true
 
-	self.quad = love.graphics.newQuad(0, 34, assetSize, assetSize, atlas:getWidth(), atlas:getHeight())
+	self.quad = entity.quad[1]
 
 	light:new(self.x, self.y, self.height * 5, {0, 0.5, 0}, self)
 end
@@ -28,7 +28,7 @@ end
 
 function cactus:draw()
 	love.graphics.setColor(255, 255, 255, 255)
-	love.graphics.draw(atlas, self.quad, math.floor(self.x - (drawSize * 0.1) ), math.floor(self.y - (drawSize * 0.12)), 0, drawSize / assetSize, drawSize / assetSize)
+	love.graphics.draw(entity.atlas, self.quad, math.floor(self.x - (drawSize * 0.1) ), math.floor(self.y - (drawSize * 0.12)), 0, drawSize / assetSize, drawSize / assetSize)
 end
 
 function cactus:col(c)

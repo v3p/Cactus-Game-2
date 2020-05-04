@@ -93,20 +93,59 @@ function ui:newImage(func, quad, x, y, scale, hideDirection)
 	return self.list[#self.list]
 end
 
-function ui:newButton(func, text, x, y, width, height, hideDirection)
+function ui:newButton(func, text, font, x, y, width, height, hideDirection)
 	local hideX, hideY = self:getHidePosition(hideDirection, x, y, width, height)
 	self.list[#self.list + 1] = {
 		type = "button",
 		func = func,
 		text = text,
 		hideDirection = hideDirection,
-		font = font.small,
+		font = font,
 		--Status
 		hidden = false,
 		offScreen = false,
 
 		width = width,
 		height = height,
+		--Current position
+		x = x,
+		y = y,
+		--target position
+		targetX = x,
+		targetY = y,
+		--Visible position
+		visibleX = x,
+		visibleY = y,
+		--Hidden position
+		hiddenX = hideX,
+		hiddenY = hideY,
+
+		screen = ""
+	}
+
+	return self.list[#self.list]
+end
+
+function ui:newCheckBox(func, text, x, y, scale, hideDirection)
+	local font = font.tiny
+	local hideX, hideY = self:getHidePosition(hideDirection, x, y, assetSize * scale, assetSize * scale)
+	local textWidth = font:getWidth(text)
+
+	self.list[#self.list + 1] = {
+		type = "checkBox",
+		func = func,
+		checked = false,
+		text = text,
+		hideDirection = hideDirection,
+		font = font,
+		--Status
+		hidden = false,
+		offScreen = false,
+
+		textWidth = textWidth,
+		width = assetSize * scale + textWidth,
+		height = assetSize * scale,
+		scale = scale,
 		--Current position
 		x = x,
 		y = y,
@@ -329,6 +368,17 @@ function ui:draw()
 			lg.rectangle("fill", v.x, v.y, v.width, v.height)
 			lg.setColor(0, 0, 0, 1)
 			lg.rectangle("line", v.x, v.y, v.width, v.height)
+		elseif v.type == "checkBox" then
+
+			lg.setColor(1, 1, 1, 1)
+			local quad = self.quad[14]
+			if v.checked then
+				quad = self.quad[15]
+			end
+			lg.draw(self.atlas, quad, v.x, v.y, 0, v.scale, v.scale)
+			lg.setFont(v.font)
+			local textHeight = v.font:getAscent() - v.font:getDescent()
+			lg.print(v.text, v.x + v.width - v.textWidth, v.y + (v.height / 2) - (textHeight / 2))
 		end
 		--lg.setColor(1, 0, 1, 1)
 		--lg.print(v.screen, v.x, v.y)
@@ -346,6 +396,12 @@ function ui:press(x, y)
 	local pressed = false
 	for i,v in ipairs(self.list) do
 		if pointInRect(x, y, v.x, v.y, v.width, v.height) then
+			--Checkbox Toggling
+			if v.type == "checkBox" then
+				v.checked = not v.checked
+				console:print("The thing happened")
+			end
+
 			if type(v.func) == "function" then
 				v.func(v)
 				pressed = true

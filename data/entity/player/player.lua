@@ -14,7 +14,13 @@ function player:load(param)
 
 	self.x = config.display.width * 0.15
 	self.y = param.ground - self.height
-	self.jumpHeight = drawSize * 16
+
+	--Jump shit
+	self.jumpForce = drawSize * 12
+	self.jumpTime = 0.15
+	self.jumpTimer = 0
+	self.jumping = false
+
 	self.gravity = true
 
 	self.gameSpeed = param.gameSpeed
@@ -34,17 +40,13 @@ function player:load(param)
 		"Deadpool",
 		"Batman"
 	}
-	self.selectedSkin = 0
-	self.quadCount = 9
+	self.currentSkin = 3
+	self.quadCount = 8
 
-	self.img, self.quad = loadAtlas("data/art/img/player.png", assetSize, assetSize, 0)
+	self.atlas, self.quad = loadAtlas("data/art/img/player.png", assetSize, assetSize, 0)
 
-
-	--Animation
-	self.animFrame = 1
-	self.animFPS = 10
-	self.animTick = 0
-	self.akdsfjgh = 0
+	self:createAnimations()
+	self.currentAnimation = "run"
 
 	--State
 	self.grounded = true
@@ -62,6 +64,18 @@ function player:load(param)
 	self.slideTick = 0
 	
 	self:setSkin()
+end
+
+function player:createAnimations()
+	--Offsetting the quads to a different skin in the atlas
+	--"8" is the width of the atlas in tiles.
+	--this could probably be done smarter fix it dumbass.
+	local quadOffset = self.currentSkin * 8
+	self.animation = {
+		run = animation.new(self.atlas, {self.quad[1 + quadOffset], self.quad[2 + quadOffset], self.quad[3 + quadOffset], self.quad[4 + quadOffset]}, 12),
+		jump = animation.new(self.atlas, {self.quad[2 + quadOffset]}, 1),
+		slide = animation.new(self.atlas, {self.quad[5 + quadOffset]}, 1)
+	}
 end
 
 function player:show()
@@ -83,7 +97,8 @@ function player:setSkin(id)
 	if id > tableLength(self.skins) - 1 then
 		id = 0
 	end
-	self.selectedSkin = id
+	self.currentSkin = id
+	self:createAnimations()
 end
 
 function player:flash()
@@ -112,22 +127,33 @@ function player:stopSlide()
 	physics:changeItem(self, self.x, self.y, self.width, self.height)
 end
 
-function player:jump(height, silent)
-	height = height or self.jumpHeight
-	silent = silent or false
+function player:jump()
 	if self.grounded then
-		self.yVel = -height
+		self.jumping = true
 		self.grounded = false
-		if not silent then 
-			local snd = "jump"
-			if state:getState().trip then
-				snd = "jumpTrip"
-			end
-			sound:setPitch(snd, 0.8)
-			sound:play(snd) 
+
+		local snd = "jump"
+		if state:getState().trip then
+			snd = "jumpTrip"
 		end
+		sound:setPitch(snd, 0.8)
+		sound:play(snd) 
+
 		sound:stop("run")
 	end
+end
+
+function player:throwGrenade()
+	entity:spawn("grenade", {x = self.x + self.width, y = self.y, xVel = (drawSize * 10), yVel = - (drawSize * 16)})
+end
+
+function player:stopJump()
+	self.jumping = false
+	self.jumpTimer = 0
+end
+
+function player:pickup(atlas, quad)
+	popup:new(atlas, quad, self.x + (self.width / 2), self.y - (self.height / 2), drawSize * 0.8)
 end
 
 --==[[ CALLBACK ]]==--
@@ -141,38 +167,39 @@ function player:update(dt)
 		end
 	end
 
-	--ANIMATION
+	--Jumping
+	if self.jumping then
+		self.yVel = -self.jumpForce
+		self.jumpTimer = self.jumpTimer + dt
+		if self.jumpTimer > self.jumpTime then
+			self.jumping = false
+			self.jumpTimer = 0
+		end
+	end
 
-	local fps = self.animFPS * self.gameSpeed
+	--ANIMATION
 	if self.moving then
 		if self.grounded then
 			if self.sliding then
-				self.animFrame = 5
+				self.currentAnimation = "slide"
 			else--RUN
-				self.animTick = self.animTick + dt
-				if self.animTick > (1 / fps) then
-					self.animFrame = self.animFrame + 1
-					if self.animFrame > 4 then
-						self.animFrame = 1
-					end
-					self.animTick = 0
-				end
+				self.currentAnimation = "run"
 			end
 		else
-			self.animFrame = 2
-			self.animTick = 1 / self.animFPS
+			self.currentAnimation = "jump"
 		end
 	end
+
+	self.animation[self.currentAnimation]:update(dt)
 
 	if self.grounded and state:getState().started then
 		sound:play("run")
 	end
 
-	self.distanceToGround = math.abs( (self.y + self.height) - state:getState().ground.y)
+	self.distanceToGround = math.abs( (self.y + self.height) - world.ground.y)
 
 	--self.y = self.y + math.floor(self._y - self.y) * (self.smoothFactor * dt)
 	self.flashAlpha = self.flashAlpha + math.floor(0 - self.flashAlpha) * (self.flashSpeed * dt)
-
 	self.opacity = self.opacity + (self.target_opacity - self.opacity) * 10 * dt
 end
 
@@ -182,8 +209,6 @@ function player:draw()
 	local yOffset = -(drawSize * 0.15)
 
 	--Skin handling
-	local frame = self.animFrame + (self.selectedSkin * self.quadCount)
-
 	if not self.grounded then
 		yOffset = 0--drawSize * 0.2
 	end
@@ -191,27 +216,20 @@ function player:draw()
 		yOffset = -(drawSize * 0.6)
 		xOffset = 0
 	end
-	love.graphics.draw(self.img, self.quad[frame], self.x + xOffset, self.y + yOffset, 0, drawSize / assetSize, drawSize / assetSize)
-	
+		
+	self.animation[self.currentAnimation]:draw(self.x + xOffset, self.y + yOffset, drawSize / assetSize, drawSize / assetSize)
+	--self.animation[self.currentAnimation]:draw(self.x + xOffset, self.y + yOffset, 0, drawSize / assetSize, drawSize / assetSize)
+
 	if self.flashAlpha > 0 then
 		setColor(1, 0, 0, self.flashAlpha)
-		love.graphics.draw(self.img, self.quad[frame], self.x + xOffset, self.y + yOffset, 0, drawSize / assetSize, drawSize / assetSize)
+		self.animation[self.currentAnimation]:draw(self.x + xOffset, self.y + yOffset, drawSize / assetSize, drawSize / assetSize)
 	end
-	
-	--[[
-	love.graphics.setColor(1, 1, 1, 1)
-	love.graphics.setFont(font.tiny)
-	love.graphics.print(tostring(self.slideTick), self.x, self.y - 24)
-	]]
-
-
-	
 end
 
 function player:colResponse(c)
-	state:getState().lives = state:getState().lives - 1
+	state:getState():loseLife()
 	self.grounded = true
-	self:jump(state:getState().player.jumpHeight * 0.5, true)
+	self.yVel = 0
 	self:flash()
 
 	sound:play("hit")
@@ -219,17 +237,9 @@ end
 
 function player:col(c)
 	if c.other.type == "cactus" then
-		if state:getState().lives < 1 then
-			state:getState():lose()
-		else
-			state:getState().lives = state:getState().lives - 1
-			state:getState().player.grounded = true
-			state:getState().player:jump(state:getState().player.jumpHeight * 0.5, true)
-			state:getState().player:flash()
-			--sound:setVolume("hit", 1)
-			sound:play("hit")
-			c.other.obsolete = true
-		end
+		state:getState():loseLife()
+		sound:play("hit")
+		c.other.obsolete = true
 	elseif c.other.type == "goodCactus" or c.other.type == "funnyCactus" then
 		c.other:colResponse(c)
 	end

@@ -14,7 +14,7 @@ function funnyCactus:load(param)
 	self.gravity = true
 	self.collected = false
 
-	self.quad = love.graphics.newQuad(34, 34, assetSize, assetSize, atlas:getWidth(), atlas:getHeight())
+	self.quad = entity.quad[18]
 
 	light:new(self.x, self.y, self.height * 7, {1, 1, 0}, self, self.width / 2, self.height / 2, true)
 end
@@ -29,7 +29,7 @@ end
 
 function funnyCactus:draw()
 	love.graphics.setColor(255, 255, 255, 255)
-	love.graphics.draw(atlas, self.quad, math.floor(self.x - (drawSize * 0.25) ), math.floor(self.y - drawSize * 0.6), 0, drawSize / assetSize, drawSize / assetSize)
+	love.graphics.draw(entity.atlas, self.quad, math.floor(self.x - (drawSize * 0.25) ), math.floor(self.y - drawSize * 0.6), 0, drawSize / assetSize, drawSize / assetSize)
 end
 
 function funnyCactus:col(c)
@@ -41,7 +41,7 @@ function funnyCactus:colResponse(c)
 		state:getState():startTrip()
 		state:getState().player.grounded = true
 		--state:getState().player:jump(state:getState().player.jumpHeight * 0.5, true)
-		popup:new(self.quad, config.display.width / 2, config.display.height / 2)
+		state:getState().player:pickup(entity.atlas, ui.quad[18])
 		self.obsolete = true
 	end
 end

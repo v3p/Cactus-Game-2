@@ -17,7 +17,11 @@ end
 
 --==[ FRONT END ]==--
 
-function entity:load(path)
+function entity:load()
+	self.atlas, self.quad = loadAtlas("data/art/img/entity.png", assetSize, assetSize)
+end
+
+function entity:loadEntities(path)
 	if not love.filesystem.getInfo(path) then
 		error("'"..path.."' does not exist")
 	else
@@ -32,20 +36,13 @@ function entity:load(path)
 	end
 end
 
---[[
-function requireFolder(path, tab)
-	tab = tab or _G
-	if not love.filesystem.getInfo(path) then
-		error("'"..path.."' does not exist")
-	else
-		for i,v in ipairs(fs.getDirectoryItems(path)) do
-			if getFileType(v) == ".lua" then
-				local name = string.gsub(v, ".lua", "")
-				tab[name] = require(path.."."..name)
-			end
-		end
+function entity:getTypes()
+	local list = {}
+	for k, v in pairs(self.type) do
+		list[#list + 1] = k
 	end
-end]]
+	return list
+end
 
 function entity:new(data, name)
 	self.type[name] = data

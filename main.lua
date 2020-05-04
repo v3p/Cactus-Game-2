@@ -3,11 +3,12 @@ SUBTITLE = "Return of the cacti"
 VERSION = "0.01"
 
 lg = love.graphics
+lw = love.window
 fs = love.filesystem
 
 function love.load()
 	--LÖVE Setup
-	love.filesystem.setIdentity("Cactus Game 2 The Dark World")
+	love.filesystem.setIdentity("Cactus Game 2")
 	love.graphics.setDefaultFilter("nearest", "nearest")
 
 	--Checking platform
@@ -41,7 +42,9 @@ function love.load()
 			fullscreen = false,
 			display = 1,
 			lights = true,
-			windowTitle = NAME.." ["..VERSION.."]"
+			windowTitle = NAME.." ["..VERSION.."]",
+			useShaders = true,
+			useChromaticAberrationShader = true
 		},
 		controls = {
 			jump = "space",
@@ -67,6 +70,8 @@ function love.load()
 		},
 		sound = {
 			volume = 1,
+			music = true,
+			soundFX = true
 		},
 		devMode = {
 			enabled = true,
@@ -76,6 +81,7 @@ function love.load()
 		}
 	}
 
+	--fs.remove("config.lua")	
 	--Creating config file
 	if love.filesystem.getInfo("config.lua") then
 		config = fs.load("config.lua")()
@@ -88,6 +94,11 @@ function love.load()
 		love.filesystem.createDirectory("screenshot")
 	end
 
+	--disable devmode on mobile 
+	if platform == "mobile" then
+		config.devMode.enabled = false
+	end
+
 	--Creating Window
 	love.window.setMode(config.display.width, config.display.height, {resizable = true, fullscreen = config.display.fullscreen, display = config.display.display, usedpiscale = false})
 	love.window.setTitle(config.display.windowTitle)
@@ -96,11 +107,9 @@ function love.load()
 	assetSize = 16
 	drawSize = math.floor(config.display.height * 0.11)
 	vignette = love.graphics.newImage("data/art/img/vignette.png")
-	--title = love.graphics.newImage("data/art/img/title.png")
 	loadFont()
-	atlas = love.graphics.newImage("data/art/img/atlas.png")
-	env = love.graphics.newImage("data/art/img/environment.png")
-	uiAtlas = love.graphics.newImage("data/art/img/ui.png")
+
+	--atlas = love.graphics.newImage("data/art/img/atlas.png")
 
 
 	console:init(0, 0, config.display.width, config.display.height, true, font.tiny)
@@ -114,7 +123,8 @@ function love.load()
 	--sound:setLoop("game_over", true)
 
 	--Defining Entities
-	entity:load("data/entity")
+	entity:load()
+	entity:loadEntities("data/entity")
 
 	--Defining Shaders
 
@@ -163,6 +173,22 @@ function love.load()
 
 	bw:send("amt", 1)
 
+	rgbSplit = shader.new([[
+	extern vec2 dir;
+	vec4 effect(vec4 color, Image tex, vec2 tc, vec2 sc)
+	{
+		return color * vec4(Texel(tex, tc - dir).r, Texel(tex, tc).g, Texel(tex, tc + dir).b, 1.0);
+	}
+
+	]])
+
+	--Togglin shaderz
+	rgbSplit:setEnabled(config.display.useChromaticAberrationShader)
+
+	--Togglin muzik
+	setMusic()
+	setSoundFX()
+
 	light:load()
 	ui:load()
 
@@ -171,8 +197,35 @@ function love.load()
 	sound:setVolume("main_theme", 0.6)
 	sound:setVolume("game_over", 0.6)
 
+
 	sound:setVolume("hit", 0.2)
 	--sound:setPitch("game_over", 1.5)
+
+end
+
+function setMusic()
+	--Togglin muzik
+	sound:setEnabled("main_theme", config.sound.music)
+	sound:setEnabled("game_over", config.sound.music)
+
+	if config.sound.music then
+		sound:play("main_theme")
+	else
+		sound:stop("main_theme")
+		sound:stop("game_over")
+	end
+end
+
+function setSoundFX()
+	sound:setEnabled("run", config.sound.soundFX)
+	sound:setEnabled("death", config.sound.soundFX)
+	sound:setEnabled("hit", config.sound.soundFX)
+	sound:setEnabled("jump", config.sound.soundFX)
+	sound:setEnabled("jumpTrip", config.sound.soundFX)
+	sound:setEnabled("life", config.sound.soundFX)
+	sound:setEnabled("trip", config.sound.soundFX)
+	sound:setEnabled("ui1", config.sound.soundFX)
+	sound:setEnabled("ui2", config.sound.soundFX)
 end
 
 function loadFont()
@@ -239,6 +292,8 @@ function love.draw()
 end
 
 function love.resize(w, h)
+	w = w or lg.getWidth()
+	h = h or lg.getHeight()
 	config.display.width = w
 	config.display.height = h
 	drawSize = math.floor(config.display.height * 0.1) --0.15
@@ -258,8 +313,22 @@ function love.quit()
 	saveConfig()
 end
 
+function fullscreen()
+	if not lw.getFullscreen then
+		love.window.setMode(0, 0, {fullscreen = true, display = config.display.display, usedpiscale = false})
+		love.resize()
+	else
+		love.window.setMode(0, 0, {resizable = true, fullscreen = false, display = config.display.display, usedpiscale = false})
+		love.resize()
+	end
+end
+
 function love.keypressed(key)
-	if key == "escape" then love.event.push("quit") end
+	if key == "escape" then
+		love.event.push("quit") 
+	elseif key == "f" then
+		fullscreen()
+	end
 
 	if console:getVisible() then
 		console:keypressed(key)

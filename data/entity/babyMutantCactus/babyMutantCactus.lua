@@ -1,11 +1,11 @@
-local mutantCactus = {}
+local babyMutantCactus = {}
 
-function mutantCactus:load(param)
+function babyMutantCactus:load(param)
 	self.type = "CACTUS"
 	self.obsolete = false
-	self.width = math.floor(drawSize * 0.8)
-	self.height = drawSize
-	self.jumpHeight = drawSize * 18
+	self.width = math.floor(drawSize * 0.2)
+	self.height = drawSize * 0.5
+	self.jumpHeight = drawSize * 14
 	self.x = config.display.width * 1.5
 	self.y = param.ground - self.height
 	self.yVel = 0
@@ -17,18 +17,13 @@ function mutantCactus:load(param)
 
 	self.jumpDistance = config.display.width * 0.16
 
-	self.quad = {
-		entity.quad[2],
-		entity.quad[3]
-	}
-
-	self.animation = animation.new(entity.atlas, {entity.quad[2], entity.quad[3]}, 3)
+	self.animation = animation.new(entity.atlas, {entity.quad[4], entity.quad[5]}, 3)
 
 	light:new(self.x, self.y, self.height * 5, {0, 0.5, 0}, self)
-	light:new(self.x, self.y, self.height * 0.6, {1, 0, 0}, self, self.width / 2, self.height * 0.2)
+	light:new(self.x, self.y, self.height * 0.6, {1, 0, 0.5}, self, self.width / 2, self.height * 0.2)
 end
 
-function mutantCactus:jump(height)
+function babyMutantCactus:jump(height)
 	height = height or self.jumpHeight
 	if self.grounded then
 		self.yVel = -height
@@ -41,7 +36,7 @@ function mutantCactus:jump(height)
 	end
 end
 
-function mutantCactus:update(dt)
+function babyMutantCactus:update(dt)
 	self.xVel = self.speed * self.gameSpeed
 	if self.x < -(config.display.width / 2) then
 		self.obsolete = true
@@ -62,13 +57,13 @@ function mutantCactus:update(dt)
 	end
 end
 
-function mutantCactus:draw()
+function babyMutantCactus:draw()
 	love.graphics.setColor(255, 255, 255, 255)
 	--love.graphics.draw(entity.atlas, self.quad[self.animFrame], math.floor(self.x - (drawSize * 0.1)) , math.floor(self.y), 0, drawSize / assetSize, drawSize / assetSize)
-	self.animation:draw(math.floor(self.x - (drawSize * 0.1)) , math.floor(self.y), drawSize / assetSize, drawSize / assetSize)
+	self.animation:draw(math.floor(self.x - self.width * 2) , math.floor(self.y - self.height), drawSize / assetSize, drawSize / assetSize)
 end
 
-function mutantCactus:col(c)
+function babyMutantCactus:col(c)
 	if c.other.type == "PLAYER" then
 		if state:getState().lives < 1 then
 			state:getState():lose()
@@ -79,4 +74,4 @@ function mutantCactus:col(c)
 	end
 end
 
-return mutantCactus
+return babyMutantCactus

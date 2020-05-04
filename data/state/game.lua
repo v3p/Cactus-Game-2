@@ -12,10 +12,8 @@ local gameOverLines = {
 	"that looked like it hurt",
 	"stings doesn't it?",
 	"you're dead",
-	"Cluckity fucked",
-	"hahahahahahahaha",
-	"<==3"
-
+	"great job",
+	"hahahahahahahaha"
 }
 
 --USER INTERFACE
@@ -32,6 +30,35 @@ function exitButton(e)
 	love.event.push("quit")
 end
 
+function backButton(e)
+	ui:hideScreen("settings")
+	ui:showScreen("main")
+end
+
+function settingsButton(e)
+	ui:hideScreen("main")
+	ui:showScreen("settings")
+end
+
+function toggleShaders(e)
+	config.display.useShaders = e.checked
+end
+
+function toggleCA(e)
+	config.display.useChromaticAberrationShader = e.checked
+	rgbSplit:setEnabled(config.display.useChromaticAberrationShader)
+end
+
+function toggleMusic(e)
+	config.sound.music = e.checked
+	setMusic()
+end
+
+function toggleSFX(e)
+	config.sound.soundFX = e.checked
+	setSoundFX()
+end
+
 --Screen creation
 function game:createStartup()
 	--UI
@@ -43,7 +70,7 @@ function game:createStartup()
 	ui:hide(self.mainPanel, true)
 	ui:setScreen(self.mainPanel, "main")
 
-	--Title
+		--Title
 	local titleQuad = ui:newQuad(0, 16, 77, 32)
 	--ui:newImage(quad, x, y, scale, hideDirection)
 	self.title = ui:newImage(false, titleQuad, 0, lg.getHeight() * 0.1, (drawSize / assetSize) * 1.4, "left")
@@ -54,7 +81,7 @@ function game:createStartup()
 
 	--Start button
 	--ui:newButton(func, text, x, y, width, height, hideDirection)
-	self.startButton = ui:newButton(startButton, "Start", 0, lg.getHeight() * 0.6, drawSize * 5, drawSize * 2, "right")
+	self.startButton = ui:newButton(startButton, "Start", font.small, 0, lg.getHeight() * 0.6, drawSize * 5, drawSize * 2, "right")
 
 	ui:setFont(self.startButton, font.large)
 
@@ -68,30 +95,91 @@ function game:createStartup()
 	ui:hide(self.exitButton, true)
 	ui:setScreen(self.exitButton, "main")
 
+	--Exit button
+	self.settingsButton = ui:newImage(settingsButton, ui.quad[5], drawSize * 0.1, drawSize * 0.1, (drawSize / assetSize) * 1.6, "top")
+
+	ui:hide(self.settingsButton, true)
+	ui:setScreen(self.settingsButton, "main")
+
+	--Creating the settings screen
+	self:createSettings()
+end
+
+function game:createSettings()
+	--ui:clear()
+	--Panel
+	self.mainPanel = ui:newPanel({0, 0, 0, 0.4}, 0, 0, lg.getWidth() / 2, lg.getHeight(), "bottom")
+	ui:center(self.mainPanel, true, false)
+	ui:hide(self.mainPanel, true)
+	ui:setScreen(self.mainPanel, "settings")
+
+
+	--back button
+	self.backButton = ui:newImage(backButton, ui.quad[6], drawSize * 0.1, lg.getHeight() - (drawSize * 1.7), (drawSize / assetSize) * 1.6, "bottom")
+
+	ui:hide(self.backButton, true)
+	ui:setScreen(self.backButton, "settings")
+
+
 	---func, text, x, y, font, color, hideDirection)
-	self.subtitle = ui:newText(false, SUBTITLE, 0, lg.getHeight() * 0.45, font.tiny, {0.9, 0.1, 0.1}, "top")
+	self.subtitle = ui:newText(false, "SETTINGS", 0, lg.getHeight() * 0.01, font.small, convertColor(228, 61, 61, 255), "bottom")
 	ui:center(self.subtitle, true, false)
 	ui:hide(self.subtitle, true)
-	ui:setScreen(self.subtitle, "main")
+	ui:setScreen(self.subtitle, "settings")
+
+	---TOGGLE SHADERS
+	self.toggleShaders = ui:newCheckBox(toggleShaders, "Use shaders", lg.getWidth() * 0.3, lg.getHeight() * 0.15, (drawSize / assetSize) * 1, "right")
+	ui:hide(self.toggleShaders, true)
+	ui:setScreen(self.toggleShaders, "settings")
+	self.toggleShaders.checked = config.display.useShaders
+
+	---TOGGLE CHROATIC ABERRATION
+	self.toggleCA = ui:newCheckBox(toggleCA, "Use chromatic ABERRATION", lg.getWidth() * 0.3, lg.getHeight() * 0.28, (drawSize / assetSize) * 1, "right")
+	ui:hide(self.toggleCA, true)
+	ui:setScreen(self.toggleCA, "settings")
+	self.toggleCA.checked = config.display.useShaders
+
+	---TOGGLE MUSIC
+	self.toggleMusic = ui:newCheckBox(toggleMusic, "Music", lg.getWidth() * 0.3, lg.getHeight() * 0.40, (drawSize / assetSize) * 1, "right")
+	ui:hide(self.toggleMusic, true)
+	ui:setScreen(self.toggleMusic, "settings")
+	self.toggleMusic.checked = config.sound.music
+
+		---TOGGLE MUSIC
+	self.toggleSFX = ui:newCheckBox(toggleSFX, "Sound effects", lg.getWidth() * 0.3, lg.getHeight() * 0.52, (drawSize / assetSize) * 1, "right")
+	ui:hide(self.toggleSFX, true)
+	ui:setScreen(self.toggleSFX, "settings")
+	self.toggleSFX.checked = config.sound.soundFX
+
 end
 
 function game:createIngame()
-	self.distanceLogo = ui:newImage(false, ui.quad[28], lg.getWidth() * 0.01, lg.getHeight() * 0.85, (drawSize / assetSize) * 1.4, "left")
+	--DISTANCE
+	self.distanceLogo = ui:newImage(false, ui.quad[25], lg.getWidth() * 0.01, lg.getHeight() * 0.85, (drawSize / assetSize) * 1.4, "left")
 	ui:hide(self.distanceLogo, true)
 	ui:setScreen(self.distanceLogo, "ingame")
 
 	self.ingameScore = ui:newText(false, "0", lg.getWidth() * 0.11, lg.getHeight() * 0.87, font.small, {0.9, 0.9, 0.9}, "bottom")
 	ui:hide(self.ingameScore, true)
 	ui:setScreen(self.ingameScore, "ingame")
+
+	--LIVES
+	self.livesLogo = ui:newImage(false, ui.quad[26], lg.getWidth() * 0.01, lg.getHeight() * 0.75, (drawSize / assetSize) * 1.4, "left")
+	ui:hide(self.livesLogo, true)
+	ui:setScreen(self.livesLogo, "ingame")
+
+	self.ingameLives = ui:newText(false, self.lives, lg.getWidth() * 0.11, lg.getHeight() * 0.77, font.small, {0.9, 0.9, 0.9}, "bottom")
+	ui:hide(self.ingameLives, true)
+	ui:setScreen(self.ingameLives, "ingame")
 end
 
 function game:createEndgame()
 	--Destroy
 	ui:clear()
 
-	self.resetButton = ui:newButton(resetButton, "RESET", 0, lg.getHeight() * 0.6, drawSize * 5, drawSize * 2, "left")
+	self.resetButton = ui:newButton(resetButton, "try again", font.small, 0, lg.getHeight() * 0.6, drawSize * 5, drawSize * 2, "left")
 
-	ui:setFont(self.resetButton, font.large)
+	--ui:setFont(self.resetButton, font.large)
 
 	ui:center(self.resetButton, true, false)
 	ui:hide(self.resetButton, true)
@@ -145,13 +233,13 @@ function game:load()
 	self.canvas = {
 		entity = love.graphics.newCanvas(config.display.width, config.display.height),
 		gui = love.graphics.newCanvas(config.display.width, config.display.height),
-		shader = love.graphics.newCanvas(config.display.width, config.display.height)
+		shader = love.graphics.newCanvas(config.display.width, config.display.height),
+		master = love.graphics.newCanvas(config.display.width, config.display.height)
 	}
 
 	self.button = {}
 
 	self.first = true
-	sky:load()
 
 	--Creating UI
 	self:createStartup()
@@ -162,17 +250,9 @@ end
 function game:reset()
 	physics:load()
 	light:load()
-	sky:createLights()
+	world:load()
+	world:createLights()
 
-	--Creating World
-	self.ground = {
-		x = 0,
-		y = math.floor(config.display.height * 0.8),
-		width = config.display.width * 2,
-		height = config.display.height - math.floor(config.display.height * 0.8),
-		color = {219, 212, 135, 255},
-		type = "GROUND"
-	}
 	--GAME VARIABLES
 	--State
 	self.started = false
@@ -200,8 +280,7 @@ function game:reset()
 	--Creating Entities
 	entity:clear()
 
-	physics:add(self.ground)
-	self.player = entity:spawn("player", {ground = self.ground.y, gameSpeed = self.gameSpeed}, "player")
+	self.player = entity:spawn("player", {ground = world.ground.y, gameSpeed = self.gameSpeed}, "player")
 
 	self.trip = false
 	self.tripDuration = 8
@@ -284,7 +363,17 @@ end
 
 function game:addLife()
 	self.lives = self.lives + 1
+	self.ingameLives.text = self.lives
 	sound:play("life")
+end
+
+function game:loseLife()
+	self.lives = self.lives - 1
+	self.ingameLives.text = self.lives
+	
+	if self.lives < 0 then
+		self:lose()
+	end
 end
 
 function game:startTrip()
@@ -325,24 +414,47 @@ function game:setVolume(c)
 	sound:setMasterVolume(realVolume)
 end
 
-function game:spawnObstacle()
+function pickType()
+	local entityType
 	--Deciding type
-	local r = love.math.random()
-	local type = "cactus"
-	if r < 0.5 then
-		r = love.math.random()
-		if r > 0.2 then
-			type = "mutantCactus"
-		elseif r > 0.1 then
-			type = "imposterCactus"
-		else
-			type = "funnyCactus"
+	local weights = {
+		{type = "cactus", weight = 50},
+		{type = "mutantCactus", weight = 40},
+		{type = "hedgehog", weight = 15},
+		{type = "imposterCactus", weight = 5},
+		{type = "babyMutantCactus", weight = 5},
+		{type = "funnyCactus", weight = 3}
+	}
+
+	--Calculating sum of the weights
+	local sum = 0
+	for i,v in ipairs(weights) do
+		sum = sum + v.weight
+	end
+
+	--Random number
+	local r = math.random(sum)
+	local rsum = 0 --running sum
+	for i,v in ipairs(weights) do
+		rsum = rsum + v.weight
+		if rsum > r then
+			entityType = v.type
+			break
 		end
 	end
-	--type = "funnyCactus"
+
+	--Terrible fix, But is plan b if the weighted random
+	--function fucks up.
+	if not entityType then
+		entityType = "cactus"
+	end
+
+	return entityType
+end
+function game:spawnObstacle()
 	
 	--Spawning
-	local c = entity:spawn(type, {ground = self.ground.y, obstacleSpeed = self.obstacleSpeed, gameSpeed = self.gameSpeed})
+	local c = entity:spawn(pickType(), {ground = world.ground.y, obstacleSpeed = self.obstacleSpeed, gameSpeed = self.gameSpeed})
 	physics.add(c)
 end
 
@@ -427,7 +539,7 @@ function game:update(dt)
 		dt = dt / 8
 	end
 
-	sky:update(dt)
+	world:update(dt)
 	game:updateObstacles(dt)
 	entity:update(dt)
 	physics:update(dt)
@@ -443,6 +555,7 @@ function game:update(dt)
 	if self.ended or self.paused then
 		sound:stop("run")
 	end
+
 end
 
 --==[[ DRAWING ]]==--
@@ -458,11 +571,8 @@ function game:drawTrip()
 
 	color:draw(function()
 
-	sky:draw()
+	world:draw()
 
-	--Ground
-	setColor(self.ground.color)
-	love.graphics.rectangle("fill", 0, self.ground.y, config.display.width, config.display.height - self.ground.y)
 
 
 	love.graphics.setBlendMode("alpha", "premultiplied")
@@ -473,29 +583,58 @@ function game:drawTrip()
 	end)
 	love.graphics.setCanvas()
 
-	wave:draw(function()
+	rgbSplit:send("dir", {drawSize * (self.tripMagnitude * 0.0004), 0})
+	rgbSplit:draw(function() 
+		wave:draw(function()
+			setColor(255, 255, 255, 255)
+			love.graphics.draw(self.canvas.shader)
+		end)
+							--popup
+		popup:draw()
+
+		--Vignette
+		setColor(255, 255, 255, 100)
+		love.graphics.draw(vignette, 0, 0, 0, config.display.width / vignette:getWidth(), config.display.height / vignette:getHeight())
+		
+		--UI Shadow
+		setColor(0, 0, 0, 30)
+		love.graphics.draw(self.canvas.gui, math.floor( -(config.display.width * 0.003)), 0)
+
 		setColor(255, 255, 255, 255)
-		love.graphics.draw(self.canvas.shader)
+		love.graphics.draw(self.canvas.gui)
+		love.graphics.setBlendMode("alpha")
 	end)
 end
 
 function game:drawLose()
 	love.graphics.setCanvas(self.canvas.shader)
-	
-	bw:draw(function()
+	rgbSplit:send("dir", {drawSize * 0.00003, 0})
+	rgbSplit:draw(function() 
+		bw:draw(function()
 
-	sky:draw()
-
-	--Ground
-	setColor(self.ground.color)
-	love.graphics.rectangle("fill", 0, self.ground.y, config.display.width, config.display.height - self.ground.y)
+			world:draw()
 
 
-	love.graphics.setBlendMode("alpha", "premultiplied")
-	setColor(255, 255, 255, 255)
-	love.graphics.draw(self.canvas.entity)
+			love.graphics.setBlendMode("alpha", "premultiplied")
+			setColor(255, 255, 255, 255)
+			love.graphics.draw(self.canvas.entity)
 
-	light:draw()
+			light:draw()
+		end)
+				--popup
+		popup:draw()
+
+		--Vignette
+		setColor(255, 255, 255, 100)
+		love.graphics.draw(vignette, 0, 0, 0, config.display.width / vignette:getWidth(), config.display.height / vignette:getHeight())
+		
+		--UI Shadow
+		setColor(0, 0, 0, 30)
+		love.graphics.draw(self.canvas.gui, math.floor( -(config.display.width * 0.003)), 0)
+
+		setColor(255, 255, 255, 255)
+		love.graphics.draw(self.canvas.gui)
+		love.graphics.setBlendMode("alpha")
 	end)
 	love.graphics.setCanvas()
 
@@ -505,8 +644,7 @@ end
 
 
 function game:draw()
-
-	--Entity
+	--Entity 
 	love.graphics.setCanvas(self.canvas.entity)
 	love.graphics.clear()
 	entity:draw()
@@ -524,31 +662,32 @@ function game:draw()
     elseif self.ended then
         self:drawLose()
 	else
-		sky:draw()
-
-		--Ground
-		setColor(self.ground.color)
-		love.graphics.rectangle("fill", 0, self.ground.y, config.display.width, config.display.height - self.ground.y)
+		rgbSplit:send("dir", {drawSize * 0.00003, 0})
+		rgbSplit:draw(function()
+			world:draw()
 
 
-		love.graphics.setBlendMode("alpha", "premultiplied")
-		setColor(255, 255, 255, 255)
-		love.graphics.draw(self.canvas.entity)
-		light:draw()
+			love.graphics.setBlendMode("alpha", "premultiplied")
+			setColor(255, 255, 255, 255)
+			love.graphics.draw(self.canvas.entity)
+			light:draw()
+
+						--popup
+			popup:draw()
+
+			--Vignette
+			setColor(255, 255, 255, 100)
+			love.graphics.draw(vignette, 0, 0, 0, config.display.width / vignette:getWidth(), config.display.height / vignette:getHeight())
+			
+			--UI Shadow
+			setColor(0, 0, 0, 30)
+			love.graphics.draw(self.canvas.gui, math.floor( -(config.display.width * 0.003)), 0)
+
+			setColor(255, 255, 255, 255)
+			love.graphics.draw(self.canvas.gui)
+			love.graphics.setBlendMode("alpha")
+		end)
 	end
-
-
-	--Vignette
-	setColor(255, 255, 255, 100)
-	love.graphics.draw(vignette, 0, 0, 0, config.display.width / vignette:getWidth(), config.display.height / vignette:getHeight())
-	
-	--UI Shadow
-	setColor(0, 0, 0, 30)
-	love.graphics.draw(self.canvas.gui, math.floor( -(config.display.width * 0.003)), 0)
-
-	setColor(255, 255, 255, 255)
-	love.graphics.draw(self.canvas.gui)
-	love.graphics.setBlendMode("alpha")
 end
 
 
@@ -557,15 +696,6 @@ function game:resize()
 end
 
 function game:keypressed(key)
-	if key == "o" then
-		ui:show(self.title)
-		ui:show(self.startButton)
-	elseif key == "p" then
-		ui:hide(self.title)
-		ui:hide(self.startButton)
-	end
-
-
 	if self.takeInput then
 		if key == config.controls.jump then
 			if not self.started then
@@ -589,11 +719,16 @@ function game:keypressed(key)
 			self.player:setSkin()
 		end
 	end
+
+	if key == "g" then
+		self.player:throwGrenade()
+	end
 end
 
 function game:keyreleased()
 	if self.takeInput then
 		self.player:stopSlide()
+		self.player:stopJump()
 	end
 end
 
@@ -611,20 +746,41 @@ end
 
 function game:mousepressed(x, y, key)
 	if platform == "pc" then
-		self:input(x, y, "mouse")
+		self:input(x, y, "press")
 	end
 end
 
 function game:input(x, y, t)
 	if self.takeInput then
-		if not ui:press(x, y) then
-			if y < self.ground.y then
-				self.player:jump()
-			else
-				self.player:slide()
+		if t == "press" then
+			if not ui:press(x, y) then
+				if self.started and not self.paused and not self.ended then
+					if y < world.ground.y then
+						self.player:jump()
+					else
+						self.player:slide()
+					end
+				end
 			end
+		elseif t == "release" then
+			self.player:stopSlide()
+			self.player:stopJump()
 		end
 	end
 end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 return game

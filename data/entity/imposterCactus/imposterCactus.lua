@@ -14,7 +14,7 @@ function imposterCactus:load(param)
 	self.gravity = true
 	self.collected = false
 
-	self.quad = love.graphics.newQuad(51, 34, assetSize, assetSize, atlas:getWidth(), atlas:getHeight())
+	self.quad = entity.quad[17]
 
 	light:new(self.x, self.y, self.height * 7, {1, 0, 0}, self, self.width / 2, self.height / 2)
 end
@@ -29,7 +29,7 @@ end
 
 function imposterCactus:draw()
 	love.graphics.setColor(255, 255, 255, 255)
-	love.graphics.draw(atlas, self.quad, math.floor(self.x - (drawSize * 0.25) ), math.floor(self.y - drawSize * 0.6), 0, drawSize / assetSize, drawSize / assetSize)
+	love.graphics.draw(entity.atlas, self.quad, math.floor(self.x - (drawSize * 0.25) ), math.floor(self.y - drawSize * 0.6), 0, drawSize / assetSize, drawSize / assetSize)
 end
 
 function imposterCactus:col(c)
@@ -41,7 +41,7 @@ function imposterCactus:colResponse(c)
 		state:getState():addLife()
 		state:getState().player.grounded = true
 		--state:getState().player:jump(state:getState().player.jumpHeight * 0.5, true)
-		popup:new(heart, config.display.width / 2, config.display.height / 2)
+		state:getState().player:pickup(ui.atlas, ui.quad[26])
 		self.obsolete = true
 	end
 end

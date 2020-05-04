@@ -13,7 +13,8 @@ function sound:load(path)
 				self.type[name] = {
 					src = love.audio.newSource(path.."/"..file, "static"),
 					vol = 1,
-					delay = false
+					delay = false,
+					enabled = true
 				}
 				console:print("Sound '"..name.."' loaded.")
 			end
@@ -24,19 +25,26 @@ end
 function sound:new(fileName, name)
 	self.type[name] = {
 		src = love.audio.newSource(fileName, "static"),
-		vol = 1
+		vol = 1,
+		enabled = true
 	}
 end
 
+function sound:setEnabled(name, e)
+	self.type[name].enabled = e
+end
+
 function sound:play(name, delay)
-	delay = delay or false
-	if not delay then
-		if self.type[name].src:isPlaying() and not self.type[name].src:isLooping() then
-			self.type[name].src:stop()
+	if self.type[name].enabled then
+		delay = delay or false
+		if not delay then
+			if self.type[name].src:isPlaying() and not self.type[name].src:isLooping() then
+				self.type[name].src:stop()
+			end
+			self.type[name].src:play()
+		else
+			self.type[name].delay = delay
 		end
-		self.type[name].src:play()
-	else
-		self.type[name].delay = delay
 	end
 end
 
