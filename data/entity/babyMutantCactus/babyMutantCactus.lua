@@ -1,7 +1,7 @@
 local babyMutantCactus = {}
 
 function babyMutantCactus:load(param)
-	self.type = "CACTUS"
+	self.type = "cactus"
 	self.obsolete = false
 	self.width = math.floor(drawSize * 0.2)
 	self.height = drawSize * 0.5
@@ -61,6 +61,10 @@ function babyMutantCactus:draw()
 	love.graphics.setColor(255, 255, 255, 255)
 	--love.graphics.draw(entity.atlas, self.quad[self.animFrame], math.floor(self.x - (drawSize * 0.1)) , math.floor(self.y), 0, drawSize / assetSize, drawSize / assetSize)
 	self.animation:draw(math.floor(self.x - self.width * 2) , math.floor(self.y - self.height), drawSize / assetSize, drawSize / assetSize)
+end
+
+function babyMutantCactus:colResponse()
+	screenEffect:ripple(self.x + (self.width / 2), self.y + (self.height / 2), 5, drawSize, convertColor(228, 61, 61, 255))
 end
 
 function babyMutantCactus:col(c)

@@ -64,13 +64,16 @@ function hedgehog:draw()
 	self.animation:draw(math.floor(self.x - self.width / 5) , math.floor(self.y - self.height), drawSize / assetSize, drawSize / assetSize)
 end
 
+function hedgehog:colResponse()
+	screenEffect:ripple(self.x + (self.width / 2), self.y + (self.height / 2), 5, drawSize, convertColor(228, 61, 61, 255))
+end
+
 function hedgehog:col(c)
 	if c.other.type == "PLAYER" then
 		if state:getState().lives < 1 then
 			state:getState():lose()
 		else
 			c.other:colResponse()
-			screenEffect:ripple(self.x + (self.width / 2), self.y + (self.height / 2), 5, drawSize, convertColor(228, 61, 61, 255))
 			self.obsolete = true
 		end
 	end

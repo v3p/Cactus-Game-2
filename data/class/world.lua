@@ -31,17 +31,19 @@ function world:load()
 	self.cloud = {
 		timer = 0,
 		spawnRate = 10, --how many seconds between a cloud spawn
-		speed = {5, 20},
-		height = {0, lg.getHeight() * 0.4},
+		speed = {10, 20},
+		height = {0, lg.getHeight() * 0.3},
 		img = {
 			love.graphics.newQuad(16, 0, 48, 16, self.atlas:getWidth(), self.atlas:getHeight()),
-			love.graphics.newQuad(64, 0, 32, 16, self.atlas:getWidth(), self.atlas:getHeight())
+			love.graphics.newQuad(64, 0, 32, 16, self.atlas:getWidth(), self.atlas:getHeight()),
+			love.graphics.newQuad(32, 32, 32, 16, self.atlas:getWidth(), self.atlas:getHeight()),
+			love.graphics.newQuad(64, 32, 64, 16, self.atlas:getWidth(), self.atlas:getHeight())
 		},
 		list = {}
 	}
 
 	--Spawning initial clouds 
-	for i=1, 5 do
+	for i=1, 8 do
 		self:spawnCloud(math.random(lg.getWidth()))
 	end
 
@@ -59,6 +61,20 @@ function world:load()
 		color = {219, 212, 135, 255},
 		type = "GROUND",
 		texture = false
+	}
+
+	self.piramid = {
+		quad = lg.newQuad(0, 48, 64, 64, self.atlas:getWidth(), self.atlas:getHeight()),
+		x = math.random(lg.getWidth()),
+		y = self.ground.y - (drawSize * 1.5),
+		speed = 50
+	}
+
+	self.mountains = {
+		quad = lg.newQuad(0, 80, 128, 16, self.atlas:getWidth(), self.atlas:getHeight()),
+		x = 0,
+		y = self.ground.y - (drawSize),
+		speed = 20
 	}
 	--These are used for the looping function
 	self.ground.x1 = 0
@@ -142,6 +158,22 @@ function world:createLights()
 end
 
 function world:update(dt)
+	local game = state:getState()
+	if not game.started or game.paused then
+		piramidSpeed = 0
+	else
+		piramidSpeed = game.gameSpeed
+	end
+
+	if state:getState().started then
+		self.piramid.x = self.piramid.x - (self.piramid.speed * dt * piramidSpeed)
+		self.mountains.x = self.mountains.x - (self.mountains.speed * dt * piramidSpeed)
+	end
+
+	if self.piramid.x < -(lg.getWidth() / 2) then
+		self.piramid.x = math.random(lg.getWidth() * 2) + lg.getWidth()
+	end
+
 	self.time = self.time + self.timeScale * dt
 	if self.time > math.pi * 2 then
 		self.time = 0
@@ -178,7 +210,6 @@ function world:update(dt)
 		end
 	end
 
-	local game = state:getState()
 	local groundSpeed = game.obstacleSpeed * game.gameSpeed
 
 	if not game.started or game.paused then
@@ -223,6 +254,13 @@ function world:draw()
 		lg.setColor(color, color, color, 0.8)
 		lg.draw(self.atlas, self.cloud.img[v.img], v.x, v.y, 0, drawSize / assetSize, drawSize / assetSize)
 	end
+
+	--Piramid
+	
+	local v = fmath.normal(self.sun.y, self.orbitRadius, -self.orbitRadius) + 0.4
+    lg.setColor(v, v, v, 1)
+	lg.draw(self.atlas, self.piramid.quad, self.piramid.x, self.piramid.y, 0, (drawSize * 1.5) / assetSize, (drawSize * 1.5) / assetSize)
+
 	--Ground
 	--setColor(self.ground.color)
 	--love.graphics.rectangle("fill", 0, self.ground.y, config.display.width, config.display.height - self.ground.y)

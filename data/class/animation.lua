@@ -26,6 +26,14 @@ function animation:setFrame(frame)
 	self.current = frame
 end
 
+function animation:setFps(fps)
+	self.fps = fps
+end
+
+function animation:getFps()
+	return self.fps
+end
+
 function animation:update(dt)
 	if self.playing then
 		self.tick = self.tick + dt

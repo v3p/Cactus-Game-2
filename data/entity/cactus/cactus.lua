@@ -31,6 +31,10 @@ function cactus:draw()
 	love.graphics.draw(entity.atlas, self.quad, math.floor(self.x - (drawSize * 0.1) ), math.floor(self.y - (drawSize * 0.12)), 0, drawSize / assetSize, drawSize / assetSize)
 end
 
+function cactus:colResponse()
+	screenEffect:ripple(self.x + (self.width / 2), self.y + (self.height / 2), 5, drawSize, convertColor(228, 61, 61, 255))
+end
+
 function cactus:col(c)
 	if c.other.type == "PLAYER" then
 		if state:getState().lives < 1 then

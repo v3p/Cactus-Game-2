@@ -33,13 +33,16 @@ function player:load(param)
 	--Image
 	self.skinNames = {
 		"dude from cactus game 1",
-		"american apparel",
+		"Green screen suit",
 		"Carl Johnson",
 		"The streaker",
 		"Business casual",
 		"deadpool cosplayer",
-		"notman",
-		"benderman"
+		"bat person",
+		"benderman",
+		"Pooper Mario",
+		"gimp",
+		"Vault dweller"
 	}
 	self.currentSkin = 1
 	self.quadCount = 8
@@ -139,6 +142,12 @@ function player:stopSlide()
 		local time = love.timer.getTime()
 		config.stats.timeSliding.value = config.stats.timeSliding.value + math.floor((time - self.slidingTime) * 100) / 100
 	end
+end
+
+function player:jumpAir()
+	self.yVel = 0
+	self.yVel = -(self.jumpForce * 2.5)
+	self.grounded = false
 end
 
 function player:jump()
@@ -257,7 +266,10 @@ function player:col(c)
 	if c.other.type == "cactus" then
 		state:getState():loseLife()
 		sound:play("hit")
+		c.other:colResponse()
 		c.other.obsolete = true
+	elseif c.other.type == "mine" then
+		c.other:explode()
 	elseif c.other.type == "goodCactus" or c.other.type == "funnyCactus" then
 		c.other:colResponse(c)
 	end

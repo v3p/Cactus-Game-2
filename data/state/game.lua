@@ -17,29 +17,48 @@ local gameOverLines = {
 }
 
 --USER INTERFACE
+function buttonFeedback(e)
+	screenEffect:ripple(e.x + e.width / 2, e.y + e.height / 2, 8, drawSize, convertColor(46, 117, 56), false)
+end
 --Button callbacks
 function startButton(e)
 	game:start()
+	sound:play("ui2")
 end
 
 function resetButton(e)
-	game:reset()
+	state:getState():load(false)
+	sound:play("ui2")
 end
 
 function exitButton(e)
 	love.event.push("quit")
+	sound:play("ui1")
 end
 
 function backButton(e)
 	ui:hideScreen("settings")
 	ui:hideScreen("skin")
 	ui:hideScreen("stats")
+	ui:hideScreen("credits")
+	ui:hideScreen("help")
+	state:getState().player:hide()
 	ui:showScreen("main")
+
+
+	buttonFeedback(e)
+	sound:play("ui2")
+
+	--if state:getState().tutorial then
+		state:getState():load(false)
+	--end
 end
 
 function settingsButton(e)
 	ui:hideScreen("main")
 	ui:showScreen("settings")
+	buttonFeedback(e)
+	sound:play("ui1")
 end
 
 function toggleShaders(e)
@@ -68,11 +87,34 @@ end
 function skinsButton(e)
 	ui:hideScreen("main")
 	ui:showScreen("skin")
+	buttonFeedback(e)
+	sound:play("ui1")
 end
 
 function statsButton(e)
 	ui:hideScreen("main")
 	ui:showScreen("stats")
+	buttonFeedback(e)
+	sound:play("ui1")
+end
+
+function creditsButton(e)
+	ui:hideScreen("main")
+	ui:showScreen("credits")
+	buttonFeedback(e)
+	sound:play("ui1")
+end
+
+function helpButton(e)
+	ui:hideScreen("main")
+	ui:showScreen("help")
+	buttonFeedback(e)
+	sound:play("ui1")
+
+	state:getState().player:show()
+	state:getState().tutorial = true
+	state:getState().lives = 1000
+	state:getState():start()
 end
 
 function lastButton(e)
@@ -94,6 +136,10 @@ function lastButton(e)
 
 		screenEffect:ripple(lg.getWidth() / 2, lg.getHeight() / 2, 12, drawSize * 3, {1, 1, 1}, false)
 	end
+
+	--
+	buttonFeedback(e)
+	sound:play("ui1")
 end
 
 function nextButton(e)
@@ -115,6 +161,14 @@ function nextButton(e)
 
 		screenEffect:ripple(lg.getWidth() / 2, lg.getHeight() / 2, 12, drawSize * 3, {1, 1, 1}, false)
 	end
+	buttonFeedback(e)
+	sound:play("ui1")
+end
+
+function loveLogo(e)
+	love.system.openURL("https://love2d.org/")
+	buttonFeedback(e)
+	sound:play("ui1")
 end
 
 --Screen creation
@@ -171,10 +225,24 @@ function game:createStartup()
 	ui:hide(self.statsButton, true)
 	ui:setScreen(self.statsButton, "main")
 
+	--Credits
+	self.creditsButton = ui:newImage(creditsButton, ui.atlas, ui.quad[16], drawSize * 0.1, drawSize * 5.2, (drawSize / assetSize) * 1.6, "top")
+
+	ui:hide(self.creditsButton, true)
+	ui:setScreen(self.creditsButton, "main")
+
+	--Help button
+	self.helpButton = ui:newImage(helpButton, ui.atlas, ui.quad[32], drawSize * 2, drawSize * 0.1, (drawSize / assetSize) * 1.6, "top")
+
+	ui:hide(self.helpButton, true)
+	ui:setScreen(self.helpButton, "main")
+
 	--Creating the settings screen
 	self:createSettings()
 	self:createSkinSelection()
 	self:createStats()
+	self:createCredits()
+	self:createHelp()
 end
 
 function game:createSkinSelection()
@@ -186,7 +254,7 @@ function game:createSkinSelection()
 
 
 	--back button
-	self.backButton = ui:newImage(backButton, ui.atlas, ui.quad[6], drawSize * 0.1, lg.getHeight() - (drawSize * 1.7), (drawSize / assetSize) * 1.6, "bottom")
+	self.backButton = ui:newImage(backButton, ui.atlas, ui.quad[24], drawSize * 0.1, lg.getHeight() - (drawSize * 1.7), (drawSize / assetSize) * 1.6, "bottom")
 
 	ui:hide(self.backButton, true)
 	ui:setScreen(self.backButton, "skin")
@@ -265,7 +333,99 @@ function game:createStats()
 	ui:center(self.stats, true, false)
 	ui:hide(self.stats, true)
 	ui:setScreen(self.stats, "stats")
+end
 
+function game:createCredits()
+	--ui:clear()
+	--Panel
+	self.settingsPanel = ui:newPanel({0, 0, 0, 0.7}, 0, 0, lg.getWidth(), lg.getHeight(), "bottom")
+	ui:center(self.settingsPanel, true, false)
+	ui:hide(self.settingsPanel, true)
+	ui:setScreen(self.settingsPanel, "credits")
+
+
+	--back button
+	self.backButton = ui:newImage(backButton, ui.atlas, ui.quad[6], drawSize * 0.1, lg.getHeight() - (drawSize * 1.7), (drawSize / assetSize) * 1.6, "bottom")
+
+	ui:hide(self.backButton, true)
+	ui:setScreen(self.backButton, "credits")
+
+
+	---func, text, x, y, font, color, hideDirection)
+	self.subtitle = ui:newText(false, "Credits", 0, lg.getHeight() * 0.01, font.small, convertColor(228, 61, 61, 255), "bottom")
+	ui:center(self.subtitle, true, false)
+	ui:hide(self.subtitle, true)
+	ui:setScreen(self.subtitle, "credits")
+
+	local creditText = [[* * *
+THIRD PARTY LIBRARIES
+	'Bump.lua' Used for collision detection and response.
+	Made by Enrique García Cota.
+* * *
+FONTS
+	'Joystix-monospace' Used as the main font.
+	Made by Typodermic Fonts
+	'VCR OSD Mono' Used in the developer console & the credits.
+	Made by Riciery Leal
+
+	Fonts acquired from 'www.dafont.com'	
+* * *
+	Created using the *awesome* framework, Löve (Version 11.3)
+	www.love2d.org
+* * *
+	Everything else made by Pawel Þorkelsson.
+
+	Thank you for playing!]]
+
+	--Stats
+	self.stats = ui:newText(false, creditText, 0, lg.getHeight() * 0.1, font.console, convertColor(228, 228, 228, 255), "bottom")
+	ui:center(self.stats, true, false)
+	ui:hide(self.stats, true)
+	ui:setScreen(self.stats, "credits")
+
+	--Love button
+	self.loveLogo = ui:newImage(backButton, ui.atlas, ui.quad[34], lg.getWidth() - (drawSize * 1.7), lg.getHeight() - (drawSize * 1.7), (drawSize / assetSize) * 1.6, "bottom")
+
+	--ui:center(self.loveLogo, true, false)
+	ui:hide(self.loveLogo, true)
+	ui:setScreen(self.loveLogo, "credits")
+end
+
+function game:createHelp()
+	--ui:clear()
+
+	--back button
+	self.backButton = ui:newImage(backButton, ui.atlas, ui.quad[6], drawSize * 0.1, lg.getHeight() - (drawSize * 1.7), (drawSize / assetSize) * 1.6, "bottom")
+
+	ui:hide(self.backButton, true)
+	ui:setScreen(self.backButton, "help")
+
+	--LINES
+	self.tutorialLines = {
+		{pc = "Press '"..config.controls.jump.."' to jump\nThe longer you hold, The higher you jump.", mobile = "Tap the sky to jump\nThe longer you hold, The higher you jump."},
+		{pc = "Press '"..config.controls.slide.."' to slide\nThe longer you hold, The further you slide.", mobile = "Tap the ground to slide\nThe longer you hold, The further you slide."},
+		{pc = "This is your regular run of the mill basic ass cactus. Jump over it or you'll get dead."},
+		{pc = "This is a mutant cactus. This fucker escaped from a nuclear testing facility and he's gonna jump over you."},
+		{pc = "This huge motherfucker is the same as the last one but bigger. Due to it's increased mass it's gonna try to jump over you, But won't clear you. Slide under it."},
+		{pc = "This is a hedgehog. Why is it in the desert? To make sure you don't leave without several spikes in your bum. Jump."},
+		{pc = "This is a landmine. A historic battle took palce in this desert in WW2 and now there's a bunch of active mines all over the place. Jump."},
+		{pc = "This is a mushroom. They're healthy. Eat that shit."},
+		{pc = "This is a peyote cactus. It's full to the brim with mescaline. You're gonna trip balls if you eat it. But also get extra points for each cactus you clear while tripping."},
+		{pc = "This world is all backwards. The longer you run, the faster you go. Also you can unlock various skins and shit. Have fun. <3"}
+
+	}
+
+	self.tutorialText = ui:newText(false, "this is tutirial text", 0, lg.getHeight() * 0.4, font.tiny, convertColor(61, 228, 61, 255), "top")
+
+	ui:hide(self.tutorialText, true)
+	ui:center(self.tutorialText, true, false)
+	ui:setScreen(self.tutorialText, "help")
+
+	self.continueText = ui:newText(false, "Jump to continue", 0, lg.getHeight() * 0.9, font.tiny, convertColor(228, 61, 61, 255), "bottom")
+
+	ui:hide(self.continueText, true)
+	ui:center(self.continueText, true, false)
+	ui:setScreen(self.continueText, "help")
 end
 
 function game:createSettings()
@@ -278,7 +438,7 @@ function game:createSettings()
 
 
 	--back button
-	self.backButton = ui:newImage(backButton, ui.atlas, ui.quad[6], drawSize * 0.1, lg.getHeight() - (drawSize * 1.7), (drawSize / assetSize) * 1.6, "bottom")
+	self.backButton = ui:newImage(backButton, ui.atlas, ui.quad[24], drawSize * 0.1, lg.getHeight() - (drawSize * 1.7), (drawSize / assetSize) * 1.6, "bottom")
 
 	ui:hide(self.backButton, true)
 	ui:setScreen(self.backButton, "settings")
@@ -354,8 +514,11 @@ function game:createEndgame()
 	ui:hide(self.resetButton, true)
 	ui:setScreen(self.resetButton, "endgame")
 
-
-	self.gameOverText = ui:newText(false, gameOverLines[math.random(#gameOverLines)], 0, lg.getHeight() * 0.05, font.large, {0.8, 0.2, 0.2}, "top")
+	local line = gameOverLines[math.random(#gameOverLines)]
+	if state:getState().tutorial then
+		line = "haha, Didn't even pass the tutorial"
+	end
+	self.gameOverText = ui:newText(false, line, 0, lg.getHeight() * 0.05, font.large, {0.8, 0.2, 0.2}, "top")
 	ui:center(self.gameOverText, true, false)
 	ui:hide(self.gameOverText, true)
 	ui:setScreen(self.gameOverText, "endgame")
@@ -398,7 +561,55 @@ function game:hideEndgame()
 	ui:hideScreen("endgame")
 end
 
-function game:load()
+function game:nextStep()
+	if not self.tutorialEntity or self.tutorialEntity.obsolete then
+		self.tutorialStep = self.tutorialStep + 1
+
+		if self.tutorialStep > #self.tutorialLines then
+			self:load()
+
+		else
+
+			---TEXT
+			local text = ""
+			if platform == "pc" then
+				text = self.tutorialLines[self.tutorialStep].pc
+			else
+				text = self.tutorialLines[self.tutorialStep].mobile
+			end
+
+			text = text or self.tutorialLines[self.tutorialStep].pc
+
+			self.tutorialText.text = text
+			
+			--ENTITY
+
+			if self.tutorialStep == 3 then
+				self.tutorialEntity  = self:spawnObstacle("cactus")
+			elseif self.tutorialStep == 4 then
+				self.tutorialEntity  = self:spawnObstacle("mutantCactus")
+			elseif self.tutorialStep == 5 then
+				self.gameSpeed = 1.4
+				self.tutorialEntity  = self:spawnObstacle("giantMutantCactus")
+			elseif self.tutorialStep == 6 then
+				self.gameSpeed = 1
+				self.tutorialEntity  = self:spawnObstacle("hedgehog")
+			elseif self.tutorialStep == 7 then
+				self.tutorialEntity  = self:spawnObstacle("mine")
+			elseif self.tutorialStep == 8 then
+				self.tutorialEntity  = self:spawnObstacle("imposterCactus")
+			elseif self.tutorialStep == 9 then
+				self.tutorialEntity  = self:spawnObstacle("funnyCactus")
+			end
+		end
+	end
+end
+
+function game:load(first)
+	self.tutorial = false
+	self.tutorialStep = 0
+	self.tutorialEntity = false
+
 	self.canvas = {
 		entity = love.graphics.newCanvas(config.display.width, config.display.height),
 		gui = love.graphics.newCanvas(config.display.width, config.display.height),
@@ -408,7 +619,7 @@ function game:load()
 
 	self.button = {}
 
-	self.first = true
+	self.first = first or true
 
 	self:reset()
 end
@@ -477,13 +688,18 @@ function game:start()
 	ui:hideScreen("settings")
 	ui:hideScreen("skin")
 	ui:hideScreen("stats")
+	ui:hideScreen("credits")
 	self:createIngame()
 	self.started = true
 	self.player:run()
 	self.player:show()
+	self.player.animation[self.player.currentAnimation]:start()
 	sound:play("run")
 	ui:hideScreen("main")
-	ui:showScreen("ingame")
+
+	if not self.tutorial then
+		ui:showScreen("ingame")
+	end
 end
 
 function game:lose()
@@ -592,58 +808,65 @@ end
 function pickType()
 	local entityType
 	--Deciding type
-	local weights = {
-		{type = "cactus", weight = 50},
-		{type = "mutantCactus", weight = 40},
-		{type = "hedgehog", weight = 15},
-		{type = "imposterCactus", weight = 5},
-		{type = "babyMutantCactus", weight = 5},
-		{type = "funnyCactus", weight = 3}
+	local types = {
+		cactus = {weight = 60, minSpeed = 1},
+		mutantCactus = {weight = 30, minSpeed = 1.1},
+		hedgehog = {weight = 10, minSpeed = 1},
+		imposterCactus = {weight = 4, minSpeed = 1.2},
+		giantMutantCactus = {weight = 5, minSpeed = 1.4},
+		funnyCactus = {weight = 3, minSpeed = 1.3},
+		mine = {weight = 3, minSpeed = 1.5}
 	}
 
 	--Calculating sum of the weights
 	local sum = 0
-	for i,v in ipairs(weights) do
+	for k,v in pairs(types) do
 		sum = sum + v.weight
 	end
 
 	--Random number
 	local r = math.random(sum)
 	local rsum = 0 --running sum
-	for i,v in ipairs(weights) do
+	for k,v in pairs(types) do
 		rsum = rsum + v.weight
 		if rsum > r then
-			entityType = v.type
+			entityType = k
 			break
 		end
 	end
 
 	--Terrible fix, But is plan b if the weighted random
 	--function fucks up.
-	if not entityType then
+	if not entityType or state:getState().gameSpeed < types[entityType].minSpeed then
 		entityType = "cactus"
 	end
 
 	return entityType
 end
-function game:spawnObstacle()
-	
+function game:spawnObstacle(type)
+	type = type or pickType()
 	--Spawning
-	local c = entity:spawn(pickType(), {ground = world.ground.y, obstacleSpeed = self.obstacleSpeed, gameSpeed = self.gameSpeed})
+	local c = entity:spawn(type, {ground = world.ground.y, obstacleSpeed = self.obstacleSpeed, gameSpeed = self.gameSpeed})
 	physics.add(c)
+
+	return c
 end
 
 --==[[ UPDATING ]]==--
 
 function game:updateObstacles(dt)
-	if self.started and not self.paused and not self.ended then
+	if self.started and not self.paused and not self.ended and not self.tutorial then
 		self.obstacleSpawnTick = self.obstacleSpawnTick + (dt * self.gameSpeed)
 		if self.obstacleSpawnTick > (1 / self.obstacleSpawnRate) then
 			game:spawnObstacle()
 			--Double Spawn
 			local r = math.random()
 			if r < 0.4 then
-				self.obstacleSpawnTick = (1 / self.obstacleSpawnRate)  / 2
+				if self.gameSpeed < 1.5 then
+					self.obstacleSpawnTick = (1 / self.obstacleSpawnRate)  / 2
+				else
+					self.obstacleSpawnTick = (1 / self.obstacleSpawnRate) * 0.3
+				end
 			else
 				self.obstacleSpawnTick = 0
 			end
@@ -741,7 +964,7 @@ function game:drawTrip()
 	
 	lg.translate(self.player.x, self.player.y)
 	lg.scale(1 + (math.cos(self.time * 0.2) * (self.tripMagnitude * 0.01)) + (0.2 * self.tripMagnitude))
-	lg.rotate(math.sin(self.time) * (self.tripMagnitude * 0.05))
+	lg.rotate(math.sin(self.time) * (self.tripMagnitude * 0.01))
 	lg.translate(-(self.player.x), -(self.player.y))
 
 	color:draw(function()
@@ -882,6 +1105,10 @@ function game:keypressed(key)
 			else
 				self.player:jump()
 			end
+
+			if self.tutorial then
+				self:nextStep()
+			end
 		end
 
 		if key == config.controls.pause then
@@ -889,6 +1116,10 @@ function game:keypressed(key)
 		elseif key == config.controls.slide then
 			if self.started then
 				self.player:slide()
+			end
+
+			if self.tutorial then
+				self:nextStep()
 			end
 		elseif key == "up" then
 			self.player:setSkin()
@@ -936,6 +1167,10 @@ function game:input(x, y, t)
 						self.player:slide()
 					end
 				end
+			end
+
+			if self.tutorial then
+				self:nextStep()
 			end
 		elseif t == "release" then
 			self.player:stopSlide()

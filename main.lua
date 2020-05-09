@@ -47,9 +47,9 @@ function love.load()
 			useChromaticAberrationShader = true
 		},
 		controls = {
-			jump = "space",
+			jump = "k",
 			pause = "p",
-			slide = "rshift",
+			slide = "l",
 
 			--DEV MODE
 			toggleDevMode = "f1",
@@ -83,7 +83,8 @@ function love.load()
 		}
 	}
 
-	fs.remove("config.lua")	
+	--fs.remove("config.lua")	
+
 	--Creating config file
 	if love.filesystem.getInfo("config.lua") then
 		config = fs.load("config.lua")()
@@ -91,7 +92,7 @@ function love.load()
 		saveConfig()
 	end
 
-	config.game.unlockedSkins = 8
+	config.game.unlockedSkins = 11
 
 	--Creating screenshot folder
 	if not love.filesystem.getInfo("screenshot") then
@@ -121,7 +122,10 @@ function love.load()
 
 	--Loading sounds
 	sound:load("data/art/snd")
-
+	
+    sound:setVolume("ui1", 0.5)
+    sound:setVolume("ui2", 0.5)
+    sound:setVolume("explode", 0.5)
 	sound:setLoop("run", true)
 	sound:setLoop("main_theme", true)
 	--sound:setLoop("game_over", true)
@@ -286,7 +290,8 @@ function love.draw()
 					 "\nDraw Calls: "..stats.drawcalls..
 					 "\nCanvas Switch: "..stats.canvasswitches..
 					 "\nTexture Memory: "..(math.floor((stats.texturememory / 1024 / 1024) * 100) / 100).."mb"..
-					 "\nCreated UI Elements: "..#ui.list, 12, 12)
+					 "\nCreated UI Elements: "..#ui.list..
+					 "\nGame speed: "..state:getState().gameSpeed, 12, 12)
 		end
 	end
 
@@ -332,7 +337,7 @@ function love.keypressed(key)
 	if key == "escape" then
 		love.event.push("quit") 
 	elseif key == "f" then
-		--fullscreen()
+		screenshot()
 	end
 
 	if console:getVisible() then
@@ -380,9 +385,7 @@ end
 
 
 function screenshot()
-	local s = love.graphics.newScreenshot()
-	local n = os.date("%x")
-	s:encode("png", "screenshot/"..os.time()..".png")
+	love.graphics.captureScreenshot("screenshot/"..os.time()..".png")
 end
 
 function openURL(url)
